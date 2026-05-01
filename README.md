@@ -13,7 +13,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/your_username/Android">
+  <a href="https://github.com/Linards888/Android">
     <img src="images/Folkrace.png" alt="Logo" width="400" height="400">
   </a>
 
@@ -66,7 +66,10 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Screenshot][product-screenshot]](images/RobotFolk.png)
+<div align="center">
+  <a href="https://github.com/Linards888/Android">
+    <img src="images/RobotFolk.png" alt="Logo" width="400" height="400">
+  </a>
 
 This project is a complete control and telemetry system for ESP-based Folkrace robots. It combines real-time PID control, wireless communication, and live BLE tuning into one cohesive setup — so instead of reflashing firmware 50 times to tweak a gain value, you just dial it in from your phone and watch the robot either nail the corner or redecorate the wall (but now scientifically 📈).
 
@@ -213,14 +216,14 @@ Project Link: [https://github.com/Linards888/Android](https://github.com/Linards
 ---
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/your_username/Android.svg?style=for-the-badge
-[contributors-url]: https://github.com/your_username/Android/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/your_username/Android.svg?style=for-the-badge
-[forks-url]: https://github.com/your_username/Android/network/members
-[stars-shield]: https://img.shields.io/github/stars/your_username/Android.svg?style=for-the-badge
-[stars-url]: https://github.com/your_username/Android/stargazers
-[issues-shield]: https://img.shields.io/github/issues/your_username/Android.svg?style=for-the-badge
-[issues-url]: https://github.com/your_username/Android/issues
-[license-shield]: https://img.shields.io/github/license/your_username/Android.svg?style=for-the-badge
-[license-url]: https://github.com/your_username/Android/blob/master/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/Linards888/Android.svg?style=for-the-badge
+[contributors-url]: https://github.com/Linards888/Android/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/Linards888/Android.svg?style=for-the-badge
+[forks-url]: https://github.com/Linards888/Android/network/members
+[stars-shield]: https://img.shields.io/github/stars/Linards888/Android.svg?style=for-the-badge
+[stars-url]: https://github.com/Linards888/Android/stargazers
+[issues-shield]: https://img.shields.io/github/issues/Linards888/Android.svg?style=for-the-badge
+[issues-url]: https://github.com/Linards888/Android/issues
+[license-shield]: https://img.shields.io/github/license/Linards888/Android.svg?style=for-the-badge
+[license-url]: https://github.com/Linards888/Android/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
