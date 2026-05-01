@@ -1,4 +1,4 @@
-# ESP Folkrace Control System
+# Android
 
 <!-- Improved compatibility of back to top link -->
 <a id="readme-top"></a>
@@ -13,8 +13,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/your_username/esp-folkrace">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+  <a href="https://github.com/Linards888/Android">
+    <img src="images/Folkrace.png" alt="Logo" width="400" height="400">
   </a>
 
 <h3 align="center">ESP Folkrace Control System</h3>
@@ -22,13 +22,13 @@
   <p align="center">
     Real-time PID control, BLE tuning, and wireless telemetry for ESP-based Folkrace robots.
     <br />
-    <a href="https://github.com/your_username/esp-folkrace"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/Linards888/Android"><strong>Explore the docs »</strong></a>
     <br /><br />
-    <a href="https://github.com/your_username/esp-folkrace">View Demo</a>
+    <a href="https://github.com/Linards888/Android/images/Demo">View Demo</a>
     ·
-    <a href="https://github.com/your_username/esp-folkrace/issues">Report Bug</a>
+    <a href="https://github.com/Linards888/Android/issues">Report Bug</a>
     ·
-    <a href="https://github.com/your_username/esp-folkrace/issues">Request Feature</a>
+    <a href="https://github.com/Linards888/Android/issues">Request Feature</a>
   </p>
 </div>
 
@@ -66,13 +66,15 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Screenshot][product-screenshot]](https://example.com)
+<div align="center">
+  <a href="https://github.com/Linards888/Android">
+    <img src="images/RobotFolk.png" alt="Logo" width="400" height="400">
+  </a>
 
 This project is a complete control and telemetry system for ESP-based Folkrace robots. It combines real-time PID control, wireless communication, and live BLE tuning into one cohesive setup — so instead of reflashing firmware 50 times to tweak a gain value, you just dial it in from your phone and watch the robot either nail the corner or redecorate the wall (but now scientifically 📈).
 
 The system uses two ESPs: one on the robot running the control logic, and one connected to your PC acting as a telemetry receiver — giving you real-time data logging, plotting, and analysis without any wires trailing behind your robot.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
@@ -85,7 +87,7 @@ The system uses two ESPs: one on the robot running the control logic, and one co
   Adjust Kp, Ki, and Kd in real time over Bluetooth Low Energy using your phone or PC — no reflashing needed.
 
 - **Wireless Telemetry (Robot ESP → Receiver ESP32)**  
-  Streams sensor data, PID state, and runtime info over radio (ESP-NOW or similar) to a stationary receiver.
+  Streams sensor data, PID state, and runtime info over radio (ESP-32 or similar) to a stationary receiver.
 
 - **PC Logging & Plotting**  
   The receiver ESP32 forwards all telemetry to your PC via Serial — store it, plot it, analyze it with whatever tool you prefer.
@@ -93,19 +95,18 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 - **Broad ESP Compatibility**  
   Designed for ESP32. Adaptable to other ESP boards with minor changes.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 ### Built With
 
 * [ESP32](https://www.espressif.com/en/products/socs/esp32) / ESP platform
-* [Arduino Framework](https://www.arduino.cc/) / [PlatformIO](https://platformio.org/)
+* [Arduino Framework](https://www.arduino.cc/)
 * Bluetooth Low Energy (BLE)
-* [ESP-NOW](https://www.espressif.com/en/products/software/esp-now/overview) wireless communication
+* [ESP-32](https://www.espressif.com/en/products/software/esp-now/overview) wireless communication
+* [HC-12](https://www.hc01.com/downloads/HC-12%20english%20datasheets.pdf) wireless communication
 * Serial interface for PC data forwarding
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
@@ -122,26 +123,6 @@ Get your robot running and slightly less chaotic.
 * A phone or PC with a BLE app (e.g. [nRF Connect](https://www.nordicsemi.com/Products/Development-tools/nrf-connect-for-mobile)) for live PID tuning
 * Basic understanding of wiring (if not, good luck soldier 🫡)
 
-### Installation
-
-1. Clone the repo
-   ```sh
-   git clone https://github.com/your_username/esp-folkrace.git
-   ```
-
-2. Open the project in Arduino IDE or PlatformIO
-
-3. Flash `robot/` firmware to your **robot ESP32**
-
-4. Flash `receiver/` firmware to your **receiver ESP32** connected to PC
-
-5. Update MAC addresses and config values in `config.h` to match your hardware
-
-6. Power up, connect via BLE, and start tuning
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
----
 
 <!-- USAGE -->
 ## Usage
@@ -149,9 +130,9 @@ Get your robot running and slightly less chaotic.
 ### BLE PID Tuning
 
 1. Power on the robot
-2. Open a BLE app on your phone or PC and connect to `ESP-Folkrace`
+2. Open a BLE app on your phone or PC and connect to `Android`
 3. Write new Kp, Ki, Kd values to the corresponding BLE characteristics
-4. Changes apply in real time — no restart required
+4. Changes apply in real time — no restart or reupload required
 
 ### Telemetry & Logging
 
@@ -160,7 +141,6 @@ Get your robot running and slightly less chaotic.
 3. Run the robot — all sensor and PID data streams live to your PC
 4. Plot and analyze with your tool of choice (Serial Plotter, matplotlib, etc.)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
@@ -168,43 +148,44 @@ Get your robot running and slightly less chaotic.
 ## System Overview
 
 ```
-┌─────────────────────────────────┐        ┌──────────────────────────┐
-│         Robot ESP32             │        │     Receiver ESP32       │
-│                                 │        │                          │
-│  ┌──────────┐  ┌─────────────┐  │        │  ┌────────────────────┐  │
-│  │  Sensors │→ │ PID Control │  │        │  │  Serial → PC       │  │
-│  └──────────┘  └──────┬──────┘  │        │  └────────────────────┘  │
-│                       ↓         │        │           ↑              │
-│               ┌───────────────┐ │        │  ┌────────────────────┐  │
-│               │  ESP-NOW TX   │─┼──────→─┼─ │    ESP-NOW RX      │  │
-│               └───────────────┘ │        │  └────────────────────┘  │
-│                                 │        └──────────────────────────┘
-│  ┌─────────────────────────┐    │                    ↓
-│  │  BLE Server (tuning)    │←───┼── Phone / PC   [ PC Logging,
-│  │  Kp, Ki, Kd             │    │                   Plotting,
-│  └─────────────────────────┘    │                   Analysis ]
-└─────────────────────────────────┘
+    ┌─────────────────────────────────┐             ┌─────────────────────────┐
+    │         Robot ESP32             │             │     Receiver ESP32      │
+    │                                 │             │                         │
+    │                 ┌──────────┐    │             │  ┌───────────────────┐  │
+    │                 │  Motors  │    │             │  │        PC         │  │
+    │                 └─────┬────┘    │             │  └───────────────────┘  │
+    │                       ↓         │             │           ↑             │
+    │  ┌──────────┐  ┌─────────────┐  │             │  ┌───────────────────┐  │
+    │  │  Sensors │→ │ PID Control │  │             │  │      Serial       │  │
+    │  └──────────┘  └──────┬──────┘  │             │  └───────────────────┘  │
+    │                       ↓         │             │           ↑             │
+    │               ┌───────────────┐ │             │  ┌───────────────────┐  │
+    │               │  ESP-32 TX    │─┼───────────→─┼─ │    ESP-32 RX      │  │
+    │               └───────────────┘ │             │  └───────────────────┘  │
+    │                                 │             └─────────────────────────┘
+    │  ┌─────────────────────────┐    │                          ↓
+    │  │  BLE Server (tuning)    │←───┼── Phone / PC         [ PC Logging,
+    │  │  Kp, Ki, Kd             │    │                         Plotting,
+    │  └─────────────────────────┘    │                         Analysis ]
+    └─────────────────────────────────┘
 ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] PID control loop
-- [x] BLE live tuning
-- [x] ESP-NOW telemetry to receiver
-- [x] PC serial data forwarding
-- [ ] Web dashboard for real-time plotting
-- [ ] PID preset save/load over BLE
+- [ ] Sensors Reading
+- [ ] BLE live tuning
+- [ ] ESP-32 telemetry to receiver
+- [ ] PC serial data forwarding
+- [ ] Dashboard for real-time plotting
+- [ ] BLE functions
 - [ ] OTA firmware updates
-- [ ] Support for additional ESP boards
 
-See the [open issues](https://github.com/your_username/esp-folkrace/issues) for the full list of proposed features and known bugs.
+See the [open issues](https://github.com/Linards888/Android/issues) for the full list of proposed features and known bugs.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
@@ -219,39 +200,30 @@ Contributions are what make the open source community such a great place to lear
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
----
-
-<!-- LICENSE -->
-## License
-
-Distributed under the Unlicense License. See `LICENSE` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ---
 
 <!-- CONTACT -->
 ## Contact
 
-Your Name — [@your_twitter](https://twitter.com/your_twitter) — your@email.com
+Linards Balodis — [@Linards888](https://www.instagram.com/Linards888) — LinardsBalodis2009@gmail.com
 
-Project Link: [https://github.com/your_username/esp-folkrace](https://github.com/your_username/esp-folkrace)
+Portfolio — [@Linards888](https://www.linardsb.xyz/)
+
+Project Link: [https://github.com/Linards888/Android](https://github.com/Linards888/Android)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/your_username/esp-folkrace.svg?style=for-the-badge
-[contributors-url]: https://github.com/your_username/esp-folkrace/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/your_username/esp-folkrace.svg?style=for-the-badge
-[forks-url]: https://github.com/your_username/esp-folkrace/network/members
-[stars-shield]: https://img.shields.io/github/stars/your_username/esp-folkrace.svg?style=for-the-badge
-[stars-url]: https://github.com/your_username/esp-folkrace/stargazers
-[issues-shield]: https://img.shields.io/github/issues/your_username/esp-folkrace.svg?style=for-the-badge
-[issues-url]: https://github.com/your_username/esp-folkrace/issues
-[license-shield]: https://img.shields.io/github/license/your_username/esp-folkrace.svg?style=for-the-badge
-[license-url]: https://github.com/your_username/esp-folkrace/blob/master/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/Linards888/Android.svg?style=for-the-badge
+[contributors-url]: https://github.com/Linards888/Android/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/Linards888/Android.svg?style=for-the-badge
+[forks-url]: https://github.com/Linards888/Android/network/members
+[stars-shield]: https://img.shields.io/github/stars/Linards888/Android.svg?style=for-the-badge
+[stars-url]: https://github.com/Linards888/Android/stargazers
+[issues-shield]: https://img.shields.io/github/issues/Linards888/Android.svg?style=for-the-badge
+[issues-url]: https://github.com/Linards888/Android/issues
+[license-shield]: https://img.shields.io/github/license/Linards888/Android.svg?style=for-the-badge
+[license-url]: https://github.com/Linards888/Android/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
