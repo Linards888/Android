@@ -20,8 +20,6 @@ Preferences pref;
 static DeltaTime dt;
 // PIDC pid(pid);
 
-BMI160 imu;
-calData imu_cal_data = {0};
 
 float kp;
 float ki;
@@ -39,6 +37,14 @@ float kleft;
 float kright;
 int fspeed;
 
+int16_t dist_left_side;
+int16_t dist_left;
+int16_t dist_front;
+int16_t dist_right;
+int16_t dist_right_side;
+int16_t dist_right_side1;
+
+VL53L8CX_ResultsData results;
 
 void load_state(){
   kp = pref.getFloat("kp");
@@ -88,8 +94,34 @@ void setup (){
   server = BLEDevice::createServer();
 
   BLEService *service = server->createService(SERVICE_UUID);
+
+  characteristic = static->createCaracteristic(
+          CHARACTERISTIC_UUID,
+          BLECharacteristic::PROPERTY_READ   |
+          BLECharacteristic::PROPERTY_WRITE  |
+          BLECharacteristic::PROPERTY_NOTIFY
+        );
+  characteristic->setCallbacks(new MyCallbacks());
+
+  service->start();
+
+  BLEAdvertising *advertising = BLEDevice::getAdvertising();
+  advertising->setServiceUUID(SERVICE_UUID);
+  advertising->setScanResponse(true);
+  advertising->setMinPrefered(0x12);
+  BLEDevice::startAdvertising();
+
+  Serial.println("BLE start");
+
+  //initialise motors
+  pinMod(pin::MA1, OUTPUT);
+  pinMod(pin::MA2, OUTPUT);
+  pinMod(pin::MB1, OUTPUT);
+  pinMod(pin::MB2, OUTPUT);
 }
 
 void loop(){
-
+  if (state == 1){
+    
+  }
 }
