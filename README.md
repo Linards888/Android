@@ -14,7 +14,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/your_username/Android">
-    <img src="images/Folkrace.png" alt="Logo" width="80" height="80">
+    <img src="images/Folkrace.png" alt="Logo" width="400" height="400">
   </a>
 
 <h3 align="center">ESP Folkrace Control System</h3>
