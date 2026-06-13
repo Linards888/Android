@@ -5,44 +5,23 @@
 #include <Wire.h>
 #include <VL53L0X.h>
 #include <FastIMU.h>
-
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-
-#define SERVICE_UUID          "deadf33f-a6a6-5155-c0de-a6a6f33f0001"
-#define CHARACTERISTIC_UUID   "dec887a8-991b-4501-9409-5b83528be174"
-
-BLEServer *server = nullptr;
-BLECharacteristic *characteristic = nullptr;
+#include "RobotBLE.h"
+#include "RobotState.h"
 
 Preferences pref;
 static DeltaTime dt;
 // PIDC pid(pid);
 
+//Configurate Parameters
+float kp, ki, ki;
+int maxspeed, minspeed, rspeed, fspeed;
+int maxdelta, constrainpid, constraindelta, errorleftdist, errorrightdist, minwalldistFront;
+float kleft, kright;
 
-float kp;
-float ki;
-float kd;
-int maxspeed;
-int minspeed;
-int maxdelta;
-int rspeed;
-int minwalldistFront;
-int errorleftdist;
-int errorrightdist;
-int constraindelta;
-int constrainpid;
-float kleft;
-float kright;
-int fspeed;
+int16_t dist_left, dist_front, dist_right;
 
-int16_t dist_left_side;
-int16_t dist_left;
-int16_t dist_front;
-int16_t dist_right;
-int16_t dist_right_side;
-int16_t dist_right_side1;
+unsigned long countdownStartTime = 0;
+const unsigned long COUNTDOWN_DURATION = 4700; //milliseconds
 
 VL53L8CX_ResultsData results;
 
@@ -54,7 +33,7 @@ void load_state(){
   minspeed = pref.getInt("minspeed");
   maxdelta = pref.getInt("maxdelta");
   rspeed = pref.getInt("rspeed");
-  minwalldistFront = pref.getInt("minwalldist");
+  minwalldistFront = pref.getInt("minwalldistFront");
   errorleftdist = pref.getInt("errorleftdist");
   errorrightdist = pref.getInt("errorrightdist");
   constraindelta = pref.getInt("constraindelta");
@@ -121,7 +100,9 @@ void setup (){
 }
 
 void loop(){
-  if (state == 1){
-    
-  }
+  switch (currentState):
+    case IDLE:
+      stop();
+
+      break;
 }
