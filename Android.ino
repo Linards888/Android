@@ -21,7 +21,8 @@ float kleft, kright;
 int16_t dist_left, dist_front, dist_right;
 
 unsigned long countdownStartTime = 0;
-const unsigned long COUNTDOWN_DURATION = 4700; //milliseconds
+const unsigned long COUNTDOWN_DURATION = 4500; //milliseconds
+RobotState currentState = IDLE;
 
 VL53L8CX_ResultsData results;
 
@@ -63,34 +64,20 @@ void save_state(){
   pref.putInt("rspeed", rspeed);
 }
 
+void stop() {
+  digitalWrite(pin::MA1, LOW);
+  digitalWrite(pin::MA2, LOW);
+  digitalWrite(pin::MB1, LOW);
+  digitalWrite(pin::MB2, LOW);
+}
+
 void setup (){
   Serial.begin(115200);
 
   pref.begin("Folkrace");
   load_state();
 
-  BLEDevice::init("Folkrace");
-  server = BLEDevice::createServer();
-
-  BLEService *service = server->createService(SERVICE_UUID);
-
-  characteristic = static->createCaracteristic(
-          CHARACTERISTIC_UUID,
-          BLECharacteristic::PROPERTY_READ   |
-          BLECharacteristic::PROPERTY_WRITE  |
-          BLECharacteristic::PROPERTY_NOTIFY
-        );
-  characteristic->setCallbacks(new MyCallbacks());
-
-  service->start();
-
-  BLEAdvertising *advertising = BLEDevice::getAdvertising();
-  advertising->setServiceUUID(SERVICE_UUID);
-  advertising->setScanResponse(true);
-  advertising->setMinPrefered(0x12);
-  BLEDevice::startAdvertising();
-
-  Serial.println("BLE start");
+  initBLE();
 
   //initialise motors
   pinMod(pin::MA1, OUTPUT);
@@ -105,4 +92,17 @@ void loop(){
       stop();
 
       break;
+    case COUNTDOWN:
+      if (millis() - countdownStartTime >= COUNTDOWN_DURATION) {
+        currentState = RUNNING;
+      }
+      break;
+    case CALIBRATION:
+      Serial.print("Calibrating IMU: ");
+      Serial.print("");
+      Serial.printnl("Calibrating Sensors: ");
+      //...
+      break;
+    case RUNNING:
+
 }
