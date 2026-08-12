@@ -1,11 +1,5 @@
 #include "DeltaTime.h"
 
-#include <Preferences.h>
-
-#include <Wire.h>
-#include <VL53L0X.h>
-#include <FastIMU.h>
-#include "RobotBLE.h"
 #include "RobotState.h"
 
 Preferences pref;
@@ -98,11 +92,39 @@ void loop(){
       }
       break;
     case CALIBRATION:
-      Serial.print("Calibrating IMU: ");
-      Serial.print("");
       Serial.printnl("Calibrating Sensors: ");
-      //...
+      #if Is_IMU
+      Serial.printnl("Calibrating IMU");
+      #endif
+
+      #if Is_TOF
+      Serial.printnl("Calibrating Tof distance Sensors");
+      #endif
+
+      #if Is_Sharp
+      Serial.printnl("Calibrating Sharp distance Sensors");
+      #endif
+
+      #if Is_Ultrasonic
+      Serial.printnl("Calibrating Ultrasonic distance Sensors");
+      #endif
+      
       break;
     case RUNNING:
+      #if TwoMotors
+      #endif
+
+      #if OneMotor
+      #endif
+
+      #if Is_TOF
+      #endif
+
+      #if Is_Sharp
+      #endif
+
+      #if Is_Ultrasonic
+      #endif
+
 
 }

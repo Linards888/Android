@@ -104,8 +104,8 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 * [Arduino Framework](https://www.arduino.cc/)
 * Bluetooth Low Energy (BLE)
 * [ESP-32](https://www.espressif.com/en/products/software/esp-now/overview) wireless communication
-* [HC-12](https://www.hc01.com/downloads/HC-12%20english%20datasheets.pdf) wireless communication
-* Serial interface for PC data forwarding
+* *[HC-12](https://www.hc01.com/downloads/HC-12%20english%20datasheets.pdf) wireless communication
+* Serial and GUI interface for PC data forwarding
 
 
 ---
@@ -113,39 +113,13 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 <!-- GETTING STARTED -->
 ## Getting Started
 
-Get your robot running and slightly less chaotic.
-
-### Prerequisites
-
-* [Arduino IDE](https://www.arduino.cc/en/software) or [PlatformIO](https://platformio.org/)
-* ESP32 board support installed ([guide here](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html))
-* Two ESP32 boards — one for the robot, one for the receiver
-* A phone or PC with a BLE app (e.g. [nRF Connect](https://www.nordicsemi.com/Products/Development-tools/nrf-connect-for-mobile)) for live PID tuning
-* Basic understanding of wiring (if not, good luck soldier 🫡)
-
-
-<!-- USAGE -->
-## Usage
-
-### BLE PID Tuning
-
-1. Power on the robot
-2. Open a BLE app on your phone or PC and connect to `Android`
-3. Write new Kp, Ki, Kd values to the corresponding BLE characteristics
-4. Changes apply in real time — no restart or reupload required
-
-### Telemetry & Logging
-
-1. Connect the receiver ESP32 to your PC via USB
-2. Open a Serial monitor or logging script (e.g. Python with `pyserial`)
-3. Run the robot — all sensor and PID data streams live to your PC
-4. Plot and analyze with your tool of choice (Serial Plotter, matplotlib, etc.)
+## UNDER MAINTANANCE
 
 
 ---
 
 <!-- SYSTEM OVERVIEW -->
-## System Overview
+## System Overview NOT EXACT (made by AI)
 
 ```
     ┌─────────────────────────────────┐             ┌─────────────────────────┐
@@ -176,12 +150,16 @@ Get your robot running and slightly less chaotic.
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Sensors Reading
-- [ ] BLE live tuning
-- [ ] ESP-32 telemetry to receiver
-- [ ] PC serial data forwarding
-- [ ] Dashboard for real-time plotting
-- [ ] BLE functions
+- [ ] configuration.h and logic
+- [ ] tof logic
+- [ ] BLE logic
+- [ ] Memory logic
+- [ ] Drive system
+- [ ] Folkrace states
+- [ ] PID logic & Matematics/Calculations
+- [ ] Calibrations
+- [ ] Prob something else
+- [ ] Ground station
 - [ ] OTA firmware updates
 
 See the [open issues](https://github.com/Linards888/Android/issues) for the full list of proposed features and known bugs.
