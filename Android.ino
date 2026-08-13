@@ -20,44 +20,6 @@ RobotState currentState = IDLE;
 
 VL53L8CX_ResultsData results;
 
-void load_state(){
-  kp = pref.getFloat("kp");
-  ki = pref.getFloat("ki");
-  kd = pref.getFloat("kd");
-  maxspeed = pref.getInt("maxspeed");
-  minspeed = pref.getInt("minspeed");
-  maxdelta = pref.getInt("maxdelta");
-  rspeed = pref.getInt("rspeed");
-  minwalldistFront = pref.getInt("minwalldistFront");
-  errorleftdist = pref.getInt("errorleftdist");
-  errorrightdist = pref.getInt("errorrightdist");
-  constraindelta = pref.getInt("constraindelta");
-  constrainpid = pref.getInt("constrainpid");
-  kleft = pref.getFloat("kleft");
-  kright = pref.getFloat("kright");
-  fspeed = pref.getInt("fspeed");
-  rspeed = pref.getInt("rspeed");
-}
-
-void save_state(){
-  pref.putFloat("kp", kp);
-  pref.putFloat("ki", ki);
-  pref.putFloat("kd", kd);
-  pref.putInt("maxspeed", maxspeed);
-  pref.putInt("minspeed", minspeed);
-  pref.putInt("maxdelta", maxdelta);
-  pref.putInt("rspeed", rspeed);
-  pref.putInt("minwalldistFront", minwalldistFront);
-  pref.putInt("errorleftdist", errorleftdist);
-  pref.putInt("errorrightdist", errorrightdist);
-  pref.putInt("constraindelta", constraindelta);
-  pref.putInt("constrainpid", constrainpid);
-  pref.putInt("kleft", kleft);
-  pref.putInt("kright", kright);
-  pref.putInt("fspeed", fspeed);
-  pref.putInt("rspeed", rspeed);
-}
-
 void stop() {
   digitalWrite(pin::MA1, LOW);
   digitalWrite(pin::MA2, LOW);
@@ -73,11 +35,6 @@ void setup (){
 
   initBLE();
 
-  //initialise motors
-  pinMod(pin::MA1, OUTPUT);
-  pinMod(pin::MA2, OUTPUT);
-  pinMod(pin::MB1, OUTPUT);
-  pinMod(pin::MB2, OUTPUT);
 }
 
 void loop(){
@@ -93,6 +50,7 @@ void loop(){
       break;
     case CALIBRATION:
       Serial.printnl("Calibrating Sensors: ");
+      #include "Calibration.h"
       #if Is_IMU
       Serial.printnl("Calibrating IMU");
       #endif

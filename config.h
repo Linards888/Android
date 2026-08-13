@@ -57,7 +57,7 @@
 // ---- TOF sensor list ----
 // Add or remove a line to add/remove a physical sensor.
 // Format: X(name, xshutPin, i2cAddress, angleDegrees)
-//   angleDegrees: 0 = front, -1-(-89) && 1-89 = front sensors, 180 = back, 90 = Right
+//   angleDegrees: 0 = front, -1-(-89) && 1-89 = front sensors, 180 = back, 90 = Right, 91-179 = back sensors
 #if Is_TOF
   #define TOF_SENSOR_LIST \
     X(front,      4, 0x30, 0)   \
