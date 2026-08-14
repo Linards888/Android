@@ -150,11 +150,11 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] configuration.h and logic
-- [ ] tof logic
+- [\] configuration.h and logic
+- [x] tof logic
 - [ ] BLE logic
 - [ ] Memory logic
-- [ ] Drive system
+- [x] Drive system
 - [ ] Folkrace states
 - [ ] PID logic & Matematics/Calculations
 - [ ] Calibrations

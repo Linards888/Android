@@ -2,6 +2,8 @@
 
 #include "RobotState.h"
 
+#include "libraries.h"
+
 Preferences pref;
 static DeltaTime dt;
 // PIDC pid(pid);
@@ -69,20 +71,6 @@ void loop(){
       
       break;
     case RUNNING:
-      #if TwoMotors
-      #endif
-
-      #if OneMotor
-      #endif
-
-      #if Is_TOF
-      #endif
-
-      #if Is_Sharp
-      #endif
-
-      #if Is_Ultrasonic
-      #endif
-
+      
 
 }

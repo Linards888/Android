@@ -69,3 +69,14 @@
   }
 
 #endif
+
+
+/* ---- Tof Usage ----
+
+//By name
+uint16_t d = tof_read("front");
+
+//by pointer
+uint16_t d = tof_read(&tof_front);
+
+*/
