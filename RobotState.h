@@ -3,14 +3,15 @@
 
 #include <Arduino.h>
 
-// Define your 6 robot states
+// Define your 7 robot states
 enum RobotState {
-  STATE_IDLE,
-  STATE_CALIBRATION,
-  STATE_COUNTDOWN,
-  STATE_RUNNING,
-  STATE_FORWARD,
-  STATE_BACKWARDS
+  IDLE,
+  READY,
+  CALIBRATION,
+  COUNTDOWN,
+  RUNNING,
+  FORWARD,
+  BACKWARDS
 };
 
 // Share the state variable across files

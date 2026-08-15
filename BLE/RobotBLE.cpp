@@ -1,8 +1,6 @@
 #include "RobotBLE.h"
 
-// Tell the compiler that these variables exist in the main file
-enum RobotState { IDLE, RUNNING, COUNTDOWN, FORWARD, BACKWARDS, CALIBRATION };
-extern RobotState currentState;
+#include "RobotState.h"
 
 extern float kp, ki, kd;
 extern int maxspeed, minspeed, fspeed, rspeed;
@@ -35,6 +33,20 @@ void initBLE() {
   BLEDevice::startAdvertising();
 
   Serial.println("BLE started successfully");
+}
+
+void notify(const char* fmt, ...) {
+  if (!characteristic) return;
+
+  char buffer[128];
+
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+
+  characteristic->setValue(buffer);
+  characteristic->notify();
 }
 
 // Handle incoming BLE data (e.g., tuning parameters mid-run)

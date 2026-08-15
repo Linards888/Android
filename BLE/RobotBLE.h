@@ -12,6 +12,12 @@ extern BLEServer *server;
 extern BLECharacteristic *characteristic;
 
 void initBLE();
+void notify(const char* fmt, ...);
+
+class MyServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) override;
+  void onDisconnect(BLEServer* pServer) override;
+};
 
 class MyCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) override;
