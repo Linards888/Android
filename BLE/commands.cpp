@@ -27,7 +27,7 @@ static void toggle_bool(bool* target, const char* fmt) {
   notify(fmt, *target);
 }
 
-// _--- k params ----
+// ---- k params ----
 
 struct FloatEntry { const char* name; float* target; const char* fmt; };
 
@@ -45,8 +45,22 @@ struct FloatEntry k_list[] = {
 };
 
 void cmd_k(char* args) {
-  //ugggggggggggggggghhhhhhhhhhh
+  char* argument = strtok_r(args, " \r\n", &args);
+  if (argument == NULL) {
+    notify("k_reverse %.4f\nk_left_side %.4f\nk_left %.4f\nk_right %.4\nk_right_side %.4f\n"),
+      state.k_reverse, state.pid.k_left_side, state.pid.k_left, state.pid.k_right, state.pid.k_right_side);
+    return;
+  }
+  for (auto& entry : k_list) {
+    if (strcmp(argument, entry.name) == 0) {
+      set_or_report_float(args, entry.target, entry.fmt);
+      return;
+    }
+  }
+  notify("unknown k subcommand\n");
 }
+
+// ---- speed ----
 
 void cmd_speed(char* args) {
     char* argument = strtok_r(args, " \r\n", &args);
@@ -75,6 +89,8 @@ void cmd_dist(char* args) {
 }
 
 // ---- Log ----
+
+struct LogEntry { const char* name; bool* enabled; uint16_t* interval_ms; const char* label; };
 
 struct LogEntry log_list[] = {
   {"dist", &state.debug.log_distance, &state.debug.log_distance_interval_ms,  "distance"},
@@ -128,22 +144,53 @@ void cmd_help(char* args);
 // ---- command table ----
 
 CommandEntry command_list[] = {
-  //i dont want to do it now
-}
+  {"ready", cmd_ready, STATE_BIT(RunningState::IDLE)},  //only form IDLE
 
-voidcmd_help(char args) {
+  {"start", cmd_start,  STATE_BIT(RunningState::READY)},
+  {"stop", cmd_stop,    STATE_BIT(RunningState::COUNTDOWN) | STATE_BIT(RunningState::RUNNING)},
+  {"state", cmd_state,  ALL_STATES},
+  {"log", cmd_log,      ALL_STATES},
+  {"k", cmd_k,          ALL_STATES},
+  {"speed", cmd_speed,  ALL_STATES},
+  {"dist", cmd_dist,    ALL_STATES},
+  {"help", cmd_help,    ALL_STATES},
+
+  {"accel",     [](char* args){ set_or_report_int(args, &state.accel, "accel %d\n"); }, ALL_STATES},
+  {"brake",     [](char* args){ set_or_report_int(args, &state.brake, "brake %d\n"); }, ALL_STATES},
+  {"constrain", [](char* args){ set_or_report_int(args, &state.dist_constrain, "constrain %d\n"); }, ALL_STATES},
+  {"slope_t",   [](char* args){ set_or_report_float(args, &state.slope_threshold, "slope treshold %.2f\n"); }, ALL_STATES},
+
+  {"reverse_drive", [](char*){ toggle_bool(&state.drive_reverse, "drive direction %d\n"); }, ALL_STATES},
+  {"scaled_speed",  [](char*){ toggle_bool(&state.scaled_speed, "scaled_speed %d\n"); }, ALL_STATES},
+  {"slope_boost",   [](char*){ toggle_bool(&state.slope_boost, "slope_boost %d\n"); },  ALL_STATES},
+  {"imu",           [](char*){ toggle_bool(&state.imu_enable, "imu %d\n"); },   ALL_STATES},
+
+  {"save",  [](char*){ state.save_state = true; }, ALL_STATES},
+  {"180",   [](char*){ state.debug.do_manual_180 = true }, STATE_BIT(RunningState::RUNNING)},
+};
+
+void cmd_help(char args) {
   notify(commands:\n);
   for (auto& entry : command_list) {
     notify("  %s\n", entry.name);
   }
 }
 
+void cmd_ready(char* args) {
+    state.running_state = RunningState::READY;
+    notify("ready\n");
+}
+
 void handle_command(char* command, char* args) {
   for (auto& entry : command_list) {
     if(strcmp(command, entry.name) == 0) {
+      if (!(entry.allowed_states & STATE_BIT(state.running_state))) {
+        notify("not allowed while in this state\n");
+        return;
+      }
       entry.handler(args);
       return;
     }
   }
-  notify("unknown commands\n");
+  notify("unknown command\n");
 }

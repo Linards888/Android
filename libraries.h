@@ -4,6 +4,10 @@
 
 // ---- Error Messages ----
 
+#if Is_Arduino == 1
+  #error "turn off arduino. i wont make it to work with it"
+#endif
+
 #if (Is_Arduino + Is_Esp32) == 0
   #error "No board selected! Set Is_Arduino to 0 and Is_Esp32 to 1."
 #endif
@@ -18,6 +22,12 @@
 
 #if (OneMotor + TwoMotors + tank) > 1
   #error "Multiple motor configurations selected! Choose only one of OneMotor / TwoMotors / tank."
+#endif
+
+#if SpaceControl = 1
+  if (SpaceControl + Is_IMU < 1)  {
+    #error "Enable Also IMU sensor, if there is no IMU, turn off SpaceControl"
+  }
 #endif
 
 // ---- libraries inclusion ----
@@ -57,4 +67,8 @@
 #if Memory
   #include <Preferences.h>
   #include "Memory.h"
+#endif
+
+#if SpaceControl
+  #include "Space.h"
 #endif

@@ -44,11 +44,11 @@ void stopMotors() {
   motor_setup();
 
 // drive individual motors by name
-  motor_setSpeed(&motor_frontLeft, 200);
-  motor_setSpeed(&motor_frontRight, 200);
-  motor_setSpeed(&motor_backLeft, -200);   // reverse
-  motor_setSpeed(&motor_backRight, -200);
+  MotorDrive(&motor_frontLeft, 200);
+  MotorDrive(&motor_frontRight, 200);
+  MotorDrive(&motor_backLeft, -200);   // reverse
+  MotorDrive(&motor_backRight, -200);
 
 // for loop generically
-  motor_setSpeed(allMotors[i], 150);
+  MotorDrive(allMotors[i], 150);
 */

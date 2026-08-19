@@ -4,7 +4,7 @@
 
 extern float kp, ki, kd;
 extern int maxspeed, minspeed, fspeed, rspeed;
-extern void save_state(); // Allows BLE to trigger a save to Preferences
+extern void save_state();
 
 BLEServer *server = nullptr;
 BLECharacteristic *characteristic = nullptr;
@@ -15,7 +15,6 @@ void initBLE() {
 
   BLEService *service = server->createService(SERVICE_UUID);
 
-  // Fixed a minor syntax typo from original draft: (static->createCharacteristic)
   characteristic = service->createCharacteristic(
                      CHARACTERISTIC_UUID,
                      BLECharacteristic::PROPERTY_READ   |
@@ -49,7 +48,6 @@ void notify(const char* fmt, ...) {
   characteristic->notify();
 }
 
-// Handle incoming BLE data (e.g., tuning parameters mid-run)
 void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
   String value = pCharacteristic->getValue();
 
@@ -57,7 +55,6 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
     Serial.print("Received BLE Data: ");
     Serial.println(value.c_str());
     
-    // Example: If your app sends "START", update the state machine
     if (value == "START") {
       currentState = CALIBRATION;
     }

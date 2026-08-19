@@ -1,4 +1,14 @@
-# Android
+<div align="center">
+<pre>
+   ░███                      ░██                     ░██       ░██ 
+  ░██░██                     ░██                               ░██ 
+ ░██  ░██  ░████████   ░████████ ░██░████  ░███████  ░██ ░████████ 
+░█████████ ░██    ░██ ░██    ░██ ░███     ░██    ░██ ░██░██    ░██ 
+░██    ░██ ░██    ░██ ░██    ░██ ░██      ░██    ░██ ░██░██    ░██ 
+░██    ░██ ░██    ░██ ░██   ░███ ░██      ░██    ░██ ░██░██   ░███ 
+░██    ░██ ░██    ░██  ░█████░██ ░██       ░███████  ░██ ░█████░██ 
+</pre>
+</div>
 
 <!-- Improved compatibility of back to top link -->
 <a id="readme-top"></a>
@@ -137,11 +147,11 @@ The system uses two ESPs: one on the robot running the control logic, and one co
     │               │  ESP-32 TX    │─┼───────────→─┼─ │    ESP-32 RX      │  │
     │               └───────────────┘ │             │  └───────────────────┘  │
     │                                 │             └─────────────────────────┘
-    │  ┌─────────────────────────┐    │                          ↓
-    │  │  BLE Server (tuning)    │←───┼── Phone / PC         [ PC Logging,
-    │  │  Kp, Ki, Kd             │    │                         Plotting,
-    │  └─────────────────────────┘    │                         Analysis ]
-    └─────────────────────────────────┘
+    │  ┌─────────────────────────┐    │                          ↓             
+    │  │  BLE Server (tuning)    │←───┼── Phone / PC         [ PC Logging,     
+    │  │  Kp, Ki, Kd             │    │                         Plotting,      
+    │  └─────────────────────────┘    │                         Analysis ]     
+    └─────────────────────────────────┘                                        
 ```
 
 
@@ -150,9 +160,10 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 <!-- ROADMAP -->
 ## Roadmap
 
-- [\] configuration.h and logic
+- [x] configuration.h and logic
 - [x] tof logic
-- [ ] BLE logic
+- [x] BLE logic BUT I WILL REDO
+- [ ] Working demo(hopefully), so its more visual, not just code.
 - [ ] Memory logic
 - [x] Drive system
 - [ ] Folkrace states

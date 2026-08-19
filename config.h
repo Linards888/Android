@@ -30,6 +30,7 @@
 #define Is_IMU         0
 #define Memory         1 //(default 1) does the folk remembers parameters?
 #define Telemetry      0 //to PC with ground station
+#define SpaceControl   0 //tries to understand track shape and where it's located on it
 
 //Ready library PID algorithms
 #define AdvancedPID    0 //by Alby312

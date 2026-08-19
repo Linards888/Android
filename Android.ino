@@ -38,6 +38,9 @@ void setup (){
 void loop(){
   switch (currentState){
     case IDLE:
+      /*state when absolutley nothing is working, there is no date being
+      sent from sensors, motors ar just off, the only BT commands are for
+      parmeter settings and to start i first have to turn it to the state "READY"*/
       stop();
 
       break;
