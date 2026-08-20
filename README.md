@@ -126,7 +126,7 @@ Instructions
 ---
 
 <!-- SYSTEM OVERVIEW -->
-## System Overview NOT EXACT (made by AI)
+## System Overview
 
 ```
     ┌──────────────────────────────────┐          ┌─────────────────┐   ┌────────────────────────────────────────┐
