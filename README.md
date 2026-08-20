@@ -96,15 +96,11 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 - **Live BLE Tuning**  
   Adjust Kp, Ki, and Kd in real time over Bluetooth Low Energy using your phone or PC — no reflashing needed.
 
-- **Wireless Telemetry (Robot ESP → Receiver ESP32)**  
+- **Wireless Telemetry with PC Logging & Plotting**  
   Streams sensor data, PID state, and runtime info over radio (ESP-32 or similar) to a stationary receiver.
 
-- **PC Logging & Plotting**  
-  The receiver ESP32 forwards all telemetry to your PC via Serial — store it, plot it, analyze it with whatever tool you prefer.
-
-- **Broad ESP Compatibility**  
-  Designed for ESP32. Adaptable to other ESP boards with minor changes.
-
+- **Folkrace positioning on the track**  
+  A setting that when enabled can understand its position in track and how the track looks like.
 
 ---
 
@@ -112,19 +108,20 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 
 * [ESP32](https://www.espressif.com/en/products/socs/esp32) / ESP platform
 * [Arduino Framework](https://www.arduino.cc/)
-* Bluetooth Low Energy (BLE)
 * [ESP-32](https://www.espressif.com/en/products/software/esp-now/overview) wireless communication
-* *[HC-12](https://www.hc01.com/downloads/HC-12%20english%20datasheets.pdf) wireless communication
+* Bluetooth Low Energy (BLE)
 * Serial and GUI interface for PC data forwarding
 
 
 ---
 
 <!-- GETTING STARTED -->
+<!--
 ## Getting Started
 
-## UNDER MAINTANANCE
+Instructions
 
+-->
 
 ---
 
@@ -132,26 +129,23 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 ## System Overview NOT EXACT (made by AI)
 
 ```
-    ┌─────────────────────────────────┐             ┌─────────────────────────┐
-    │         Robot ESP32             │             │     Receiver ESP32      │
-    │                                 │             │                         │
-    │                 ┌──────────┐    │             │  ┌───────────────────┐  │
-    │                 │  Motors  │    │             │  │        PC         │  │
-    │                 └─────┬────┘    │             │  └───────────────────┘  │
-    │                       ↓         │             │           ↑             │
-    │  ┌──────────┐  ┌─────────────┐  │             │  ┌───────────────────┐  │
-    │  │  Sensors │→ │ PID Control │  │             │  │      Serial       │  │
-    │  └──────────┘  └──────┬──────┘  │             │  └───────────────────┘  │
-    │                       ↓         │             │           ↑             │
-    │               ┌───────────────┐ │             │  ┌───────────────────┐  │
-    │               │  ESP-32 TX    │─┼───────────→─┼─ │    ESP-32 RX      │  │
-    │               └───────────────┘ │             │  └───────────────────┘  │
-    │                                 │             └─────────────────────────┘
-    │  ┌─────────────────────────┐    │                          ↓             
-    │  │  BLE Server (tuning)    │←───┼── Phone / PC         [ PC Logging,     
-    │  │  Kp, Ki, Kd             │    │                         Plotting,      
-    │  └─────────────────────────┘    │                         Analysis ]     
-    └─────────────────────────────────┘                                        
+    ┌──────────────────────────────────┐          ┌─────────────────┐   ┌────────────────────────────────────────┐
+    │■■■■■■■■■ Folkrace ESP32 ■■■■■■■■■│          │■■■■■ Phone ■■■■■│   │■■■■■■■■■■■■■■■■■■ PC ■■■■■■■■■■■■■■■■■■│
+    │                                  │          │╔═══════════════╗│   │ ╔══════════════╗   ╔═════════════════╗ │
+    │   ╔══════════╗   ╔═══════════╗   │          │║ bluetooth app ║│   │ ║   Logging,   ║   ║  Data logger    ║ │
+    │   ║  Motors  ║   ║  Sensors  ║   │    ╔══════╣      or       ║│   │ ║   Plotting,  ║   ║                 ║ │
+    │   ╚════╦═════╝   ╚═════╦═════╝   │    ║     │║   BT serial   ║│   │ ║   Analysis,  ╠═══╣ CSV file format ║ │
+    │        ╚═══════╦═══════╝         │    ║     │╚═══════════════╝│   │ ║    Mapping   ║   ║                 ║ │
+    │     ╔══════════════════════╗     │    ║     └─────────────────┘   │ ╚══════════════╝   ╚═══════╦═════════╝ │
+    │     ║  PID Control & Magic ╠══════════╬═ bluetooth                └────────────────────────────║───────────┘
+    │     ╚══════════════════════╝     │    ║   ┌───────────────────────────────────────┐            ║            
+    │        ╔═══════╩═══════╗         │    ║   │■■■■■■■■■■■ Ground Station ■■■■■■■■■■■■│            ║            
+    │  ╔═════╩═════╗   ╔═════╩═════╗   │    ║   │ ╔═══════════════╗   ╔═══════════════╗ │            ║            
+    │  ║  Battery  ║   ║    etc.   ║   │    ║   │ ║  BLE receiver ║   ║     Serial    ║ │            ║            
+    │  ╚═══════════╝   ╚═══════════╝   │    ╚═════╣               ║   ║               ╠══════════════╝            
+    │                                  │        │ ║   Gets Data   ╠═══╣  sends to PC  ║ │                         
+    │                                  │        │ ╚═══════════════╝   ╚═══════════════╝ │                         
+    └──────────────────────────────────┘        └───────────────────────────────────────┘                         
 ```
 
 
@@ -174,7 +168,6 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 - [ ] OTA firmware updates
 
 See the [open issues](https://github.com/Linards888/Android/issues) for the full list of proposed features and known bugs.
-
 
 ---
 

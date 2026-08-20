@@ -26,7 +26,7 @@
 
 #if SpaceControl = 1
   if (SpaceControl + Is_IMU < 1)  {
-    #error "Enable Also IMU sensor, if there is no IMU, turn off SpaceControl"
+    #error "Enable Also IMU sensor, if there is no IMU, turn off SpaceControl cant work"
   }
 #endif
 
@@ -69,6 +69,6 @@
   #include "Memory.h"
 #endif
 
-#if SpaceControl
+#if spaceControl
   #include "Space.h"
 #endif
