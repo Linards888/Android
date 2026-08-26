@@ -32,7 +32,7 @@
   <p align="center">
     Real-time PID control, BLE tuning, and wireless telemetry for ESP-based Folkrace robots.
     <br />
-    <a href="https://github.com/Linards888/Android"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/Linards888/Android/Documentation"><strong>Explore the docs »</strong></a>
     <br /><br />
     <a href="https://github.com/Linards888/Android/images/Demo">View Demo</a>
     ·
@@ -129,23 +129,23 @@ Instructions
 ## System Overview
 
 ```
-    ┌──────────────────────────────────┐          ┌─────────────────┐   ┌────────────────────────────────────────┐
-    │■■■■■■■■■ Folkrace ESP32 ■■■■■■■■■│          │■■■■■ Phone ■■■■■│   │■■■■■■■■■■■■■■■■■■ PC ■■■■■■■■■■■■■■■■■■│
-    │                                  │          │╔═══════════════╗│   │ ╔══════════════╗   ╔═════════════════╗ │
-    │   ╔══════════╗   ╔═══════════╗   │          │║ bluetooth app ║│   │ ║   Logging,   ║   ║  Data logger    ║ │
-    │   ║  Motors  ║   ║  Sensors  ║   │    ╔══════╣      or       ║│   │ ║   Plotting,  ║   ║                 ║ │
-    │   ╚════╦═════╝   ╚═════╦═════╝   │    ║     │║   BT serial   ║│   │ ║   Analysis,  ╠═══╣ CSV file format ║ │
-    │        ╚═══════╦═══════╝         │    ║     │╚═══════════════╝│   │ ║    Mapping   ║   ║                 ║ │
-    │     ╔══════════════════════╗     │    ║     └─────────────────┘   │ ╚══════════════╝   ╚═══════╦═════════╝ │
-    │     ║  PID Control & Magic ╠══════════╬═ bluetooth                └────────────────────────────║───────────┘
-    │     ╚══════════════════════╝     │    ║   ┌───────────────────────────────────────┐            ║            
-    │        ╔═══════╩═══════╗         │    ║   │■■■■■■■■■■■ Ground Station ■■■■■■■■■■■■│            ║            
-    │  ╔═════╩═════╗   ╔═════╩═════╗   │    ║   │ ╔═══════════════╗   ╔═══════════════╗ │            ║            
-    │  ║  Battery  ║   ║    etc.   ║   │    ║   │ ║  BLE receiver ║   ║     Serial    ║ │            ║            
-    │  ╚═══════════╝   ╚═══════════╝   │    ╚═════╣               ║   ║               ╠══════════════╝            
-    │                                  │        │ ║   Gets Data   ╠═══╣  sends to PC  ║ │                         
-    │                                  │        │ ╚═══════════════╝   ╚═══════════════╝ │                         
-    └──────────────────────────────────┘        └───────────────────────────────────────┘                         
+┌──────────────────────────────────┐    ┌─────────────────┐ ┌────────────────────────────────────────┐
+│■■■■■■■■■ Folkrace ESP32 ■■■■■■■■■│    │■■■■■ Phone ■■■■■│ │■■■■■■■■■■■■■■■■■■ PC ■■■■■■■■■■■■■■■■■■│
+│                                  │    │╔═══════════════╗│ │ ╔══════════════╗   ╔═════════════════╗ │
+│   ╔══════════╗   ╔═══════════╗   │    │║ bluetooth app ║│ │ ║   Logging,   ║   ║  Data logger    ║ │
+│   ║  Motors  ║   ║  Sensors  ║   │ ╔═══╣      or       ║│ │ ║   Plotting,  ║   ║                 ║ │
+│   ╚════╦═════╝   ╚═════╦═════╝   │ ║  │║   BT serial   ║│ │ ║   Analysis,  ╠═══╣ CSV file format ║ │
+│        ╚═══════╦═══════╝         │ ║  │╚═══════════════╝│ │ ║    Mapping   ║   ║                 ║ │
+│     ╔══════════════════════╗     │ ║  └─────────────────┘ │ ╚══════════════╝   ╚════════╦════════╝ │
+│     ║  PID Control & Magic ╠═══════╬════bluetooth         └─────────────────────────────║──────────┘
+│     ╚══════════════════════╝     │ ║  ┌───────────────────────────────────────┐         ║           
+│        ╔═══════╩═══════╗         │ ║  │■■■■■■■■■■■ Ground Station ■■■■■■■■■■■■│         ║           
+│  ╔═════╩═════╗   ╔═════╩═════╗   │ ║  │ ╔═══════════════╗   ╔═══════════════╗ │         ║           
+│  ║  Battery  ║   ║    etc.   ║   │ ║  │ ║  BLE receiver ║   ║     Serial    ║ │         ║           
+│  ╚═══════════╝   ╚═══════════╝   │ ╚════╣               ║   ║               ╠═══════════╝           
+│                                  │    │ ║   Gets Data   ╠═══╣  sends to PC  ║ │                     
+│                                  │    │ ╚═══════════════╝   ╚═══════════════╝ │                     
+└──────────────────────────────────┘    └───────────────────────────────────────┘                     
 ```
 
 
@@ -160,9 +160,10 @@ Instructions
 - [ ] Working demo(hopefully), so its more visual, not just code.
 - [ ] Memory logic
 - [x] Drive system
-- [ ] Folkrace states
+- [x] Folkrace states
 - [ ] PID logic & Matematics/Calculations
 - [ ] Calibrations
+- [ ] Space Avereness
 - [ ] Prob something else
 - [ ] Ground station
 - [ ] OTA firmware updates
