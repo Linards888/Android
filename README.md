@@ -24,7 +24,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/Linards888/Android">
-    <img src="images/Folkrace.png" alt="Logo" width="400" height="400">
+    <img src="docs/images/Folkrace.png" alt="Logo" width="400" height="400">
   </a>
 
 <h3 align="center">ESP Folkrace Control System</h3>
@@ -78,7 +78,7 @@
 
 <div align="center">
   <a href="https://github.com/Linards888/Android">
-    <img src="images/RobotFolk.png" alt="Logo" width="400" height="400">
+    <img src="docs/images/RobotFolk.png" alt="Logo" width="400" height="400">
   </a>
 
 This project is a complete control and telemetry system for ESP-based Folkrace robots. It combines real-time PID control, wireless communication, and live BLE tuning into one cohesive setup — so instead of reflashing firmware 50 times to tweak a gain value, you just dial it in from your phone and watch the robot either nail the corner or redecorate the wall (but now scientifically 📈).
@@ -129,23 +129,23 @@ Instructions
 ## System Overview
 
 ```
-┌──────────────────────────────────┐    ┌─────────────────┐ ┌────────────────────────────────────────┐
-│■■■■■■■■■ Folkrace ESP32 ■■■■■■■■■│    │■■■■■ Phone ■■■■■│ │■■■■■■■■■■■■■■■■■■ PC ■■■■■■■■■■■■■■■■■■│
-│                                  │    │╔═══════════════╗│ │ ╔══════════════╗   ╔═════════════════╗ │
-│   ╔══════════╗   ╔═══════════╗   │    │║ bluetooth app ║│ │ ║   Logging,   ║   ║  Data logger    ║ │
-│   ║  Motors  ║   ║  Sensors  ║   │ ╔═══╣      or       ║│ │ ║   Plotting,  ║   ║                 ║ │
-│   ╚════╦═════╝   ╚═════╦═════╝   │ ║  │║   BT serial   ║│ │ ║   Analysis,  ╠═══╣ CSV file format ║ │
-│        ╚═══════╦═══════╝         │ ║  │╚═══════════════╝│ │ ║    Mapping   ║   ║                 ║ │
-│     ╔══════════════════════╗     │ ║  └─────────────────┘ │ ╚══════════════╝   ╚════════╦════════╝ │
-│     ║  PID Control & Magic ╠═══════╬════bluetooth         └─────────────────────────────║──────────┘
-│     ╚══════════════════════╝     │ ║  ┌───────────────────────────────────────┐         ║           
-│        ╔═══════╩═══════╗         │ ║  │■■■■■■■■■■■ Ground Station ■■■■■■■■■■■■│         ║           
-│  ╔═════╩═════╗   ╔═════╩═════╗   │ ║  │ ╔═══════════════╗   ╔═══════════════╗ │         ║           
-│  ║  Battery  ║   ║    etc.   ║   │ ║  │ ║  BLE receiver ║   ║     Serial    ║ │         ║           
-│  ╚═══════════╝   ╚═══════════╝   │ ╚════╣               ║   ║               ╠═══════════╝           
-│                                  │    │ ║   Gets Data   ╠═══╣  sends to PC  ║ │                     
-│                                  │    │ ╚═══════════════╝   ╚═══════════════╝ │                     
-└──────────────────────────────────┘    └───────────────────────────────────────┘                     
+┌──────────────────────────────────┐    ┌─────────────────┐ ┌───────────────────────────────────────┐
+│■■■■■■■■■ Folkrace ESP32 ■■■■■■■■■│    │■■■■■ Phone ■■■■■│ │■■■■■■■■■■■■■■■■■■ PC ■■■■■■■■■■■■■■■■■│
+│                                  │    │╔═══════════════╗│ │ ╔══════════════╗  ╔═════════════════╗ │
+│   ╔══════════╗   ╔═══════════╗   │    │║ bluetooth app ║│ │ ║   Logging,   ║  ║  Data logger    ║ │
+│   ║  Motors  ║   ║  Sensors  ║   │ ╔═══╣      or       ║│ │ ║   Plotting,  ║  ║                 ║ │
+│   ╚════╦═════╝   ╚═════╦═════╝   │ ║  │║   BT serial   ║│ │ ║   Analysis,  ╠══╣ CSV file format ║ │
+│        ╚═══════╦═══════╝         │ ║  │╚═══════════════╝│ │ ║    Mapping   ║  ║                 ║ │
+│     ╔══════════════════════╗     │ ║  └─────────────────┘ │ ╚══════════════╝  ╚════════╦════════╝ │
+│     ║  PID Control & Magic ╠═══════╬════bluetooth         └────────────────────────────║──────────┘
+│     ╚══════════════════════╝     │ ║  ┌───────────────────────────────────────┐        ║           
+│        ╔═══════╩═══════╗         │ ║  │■■■■■■■■■■■ Ground Station ■■■■■■■■■■■■│        ║           
+│  ╔═════╩═════╗   ╔═════╩═════╗   │ ║  │ ╔═══════════════╗   ╔═══════════════╗ │        ║           
+│  ║  Battery  ║   ║    etc.   ║   │ ║  │ ║  BLE receiver ║   ║     Serial    ║ │        ║           
+│  ╚═══════════╝   ╚═══════════╝   │ ╚════╣               ║   ║               ╠══════════╝           
+│                                  │    │ ║   Gets Data   ╠═══╣  sends to PC  ║ │                    
+│                                  │    │ ╚═══════════════╝   ╚═══════════════╝ │                    
+└──────────────────────────────────┘    └───────────────────────────────────────┘                    
 ```
 
 
