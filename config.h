@@ -1,7 +1,7 @@
 #pragma once
 
 /* ============================================================
- *  ⚠ CONFIGURATION: SET FOR YOUR FOLKRACE TYPE ⚠
+ *  CONFIGURATION: SET FOR YOUR FOLKRACE TYPE
  * ============================================================
  *  Change the parameters below to match your specific
  *  Folkrace robot type before uploading.
@@ -32,11 +32,10 @@
 #define Telemetry      0 //to PC with ground station
 #define spaceControl   0 //tries to understand track shape and where it's located on it
 
-//Ready library PID algorithms
-#define AdvancedPID    0 //by Alby312
-#define PID_           0 //by Brett Beauregard
-
-
+//Select ready Algorithms
+#define Cloude 0 //not implemented yet
+#define MyAlgorithm 0 //not implemented yet
+#define DefoultAlgorithm 0 //not implemented yet
 
 
 

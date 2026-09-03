@@ -1,11 +1,7 @@
 #include "DeltaTime.h"
-
 #include "RobotState.h"
-
 #include "libraries.h"
-
 #include "RobotBLE.h"
-
 #include "Calibration.h"
 
 
@@ -22,7 +18,7 @@ float kleft, kright;
 int16_t dist_left, dist_front, dist_right;
 
 unsigned long countdownStartTime = 0;
-const unsigned long COUNTDOWN_DURATION = 4500; //milliseconds
+const unsigned long COUNTDOWN_DURATION = 5000; //milliseconds
 RobotState currentState = IDLE;
 
 void setup (){

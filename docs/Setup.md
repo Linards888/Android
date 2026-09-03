@@ -34,4 +34,48 @@ The main sketch is `Android.ino`. Project code is grouped under `src/`(hopefully
 
 ### Arduino Community Edition - VScode
 > [!NOTE]
-> Useful information that users should know, even when skimming content.
+> Coming Soon!
+
+## 3. Install libraries
+
+
+In Arduino IDE, open **Tools > Manage Libraries** and install only the libraries
+needed by the features you turn on in `config/config.h`:
+
+| Feature | Library |
+| --- | --- |
+| IMU (`Is_IMU`) | FastIMU |
+| VL53L0X distance sensors (`Is_TOF`) | VL53L0X by Pololu |
+| Servo (`Is_servo`) | kkads_servo |
+| BLE (`Is_blueTooth`) | Provided by the installed ESP32 board package |
+
+`Wire`, `Arduino`, and `Preferences` are supplied by the Arduino/ESP32
+framework and do not need separate installation.
+
+## 4. Configure your robot.
+
+> [!NOTE]
+> 1. Go to [`config/config.h`](config/config.h) before building. Change the `0` and `1` values to describe the robot you actually built.
+> 2. Select your chosen Board and serial Port.
+> 3. Go to `Tools` and set theese settings:
+>  USB CDC On Boot: `Enabled`
+>  Erase All Flash Before Sketch Upload: `Disabled`
+>  Upload Speed: (preferably `115200`) as high as possible, for fastest upload
+> 4. Set boud rate to **115200**.
+
+> [!WARNING]
+> 1. Leave `Is_Esp32` set to `1` and `Is_Arduino` set to `0`.
+> 1. Leave `Memory` set to `1`. 
+> 2. Enable sensors that are physically fitted. For example, set `Is_TOF` to `1` only when VL53L0X sensors are connected.
+> 3. Select exactly one drive type: `OneMotor`, `TwoMotors`, or `tank`. Set `Is_servo` to `1` as well if the steering servo is installed.
+> 4. Enable optional features such as `Is_blueTooth`, `Is_IMU`
+> 5. Update the sensor lists, motor pins.
+
+## 6. Upload the sketch
+
+1. Connect Microcontroller to PC and select **Serial Port**.
+2. CLick **Upload**, and wait for the code to upload.
+3. If there are errors, check `trubleshooting.md`.
+
+> [!NOTE]
+> When Bluetooth is enabled, the firmware advertises itself as `Folkrace`.
