@@ -1,20 +1,14 @@
 #pragma once
 #include <Arduino.h>
-#include "config.h"
+#include "../../config.h"
 
-struct Motor {
-  const char* name;
-  uint8_t MotorPinA;
-  uint8_t MotorPinB;
-};
-
-#define X(name, MotorPinA, MotorPinB) extern Motor motor_##name;
-  MOTOR_LIST
-#undef X
-
+struct Motor { const char* name; uint8_t in1; uint8_t in2; bool reversed; };
 extern Motor* allmotors[];
 extern const uint8_t MOTOR_COUNT;
 
-void motorsetup();
-void MotorDrive(Motor* m, int speed);
+void driveBegin();
+void setMotor(Motor& motor, int power);
+void setMotor(uint8_t index, int power);
+void driveTank(int leftPower, int rightPower);
+void driveArcade(int throttle, int steering);
 void stopMotors();

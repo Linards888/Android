@@ -40,7 +40,7 @@ The main sketch is `Android.ino`. Project code is grouped under `src/`(hopefully
 
 
 In Arduino IDE, open **Tools > Manage Libraries** and install only the libraries
-needed by the features you turn on in `config/config.h`:
+needed by the features you turn on in `config.h`:
 
 | Feature | Library |
 | --- | --- |
@@ -55,7 +55,7 @@ framework and do not need separate installation.
 ## 4. Configure your robot.
 
 > [!NOTE]
-> 1. Go to [`config/config.h`](config/config.h) before building. Change the `0` and `1` values to describe the robot you actually built.
+> 1. Go to [`config.h`](../config.h) before building. Set the motor-driver pins, direction flags, I2C pins/address, and enabled features to describe the robot you actually built.
 > 2. Select your chosen Board and serial Port.
 > 3. Go to `Tools` and set theese settings:
 >  USB CDC On Boot: `Enabled`
@@ -79,3 +79,29 @@ framework and do not need separate installation.
 
 > [!NOTE]
 > When Bluetooth is enabled, the firmware advertises itself as `Folkrace`.
+
+## Phone control
+
+With `FOLKRACE_ENABLE_BLE` set to `1`, connect using a BLE UART app such as
+**nRF Connect** or **Serial Bluetooth Terminal**. The firmware advertises the
+standard Nordic UART Service; write plain-text commands to its RX characteristic
+and enable notifications on TX to receive responses. Each command may be sent
+as one BLE write (a trailing newline is optional).
+
+```text
+HELP
+READY
+DRIVE 120 -30
+START
+STOP
+```
+
+`DRIVE <throttle> <steering>` uses values from `-255` to `255` and performs
+arcade mixing. `TANK <left> <right>` controls each wheel directly. A lost
+control command stops both motors after `FOLKRACE_COMMAND_TIMEOUT_MS`; this is
+intentional safety behavior. `STATUS` reports the connection/state and `IMU`
+prints the latest acceleration and gyro sample when the IMU is enabled.
+
+For an MPU-6050, enable `FOLKRACE_ENABLE_IMU`, install **FastIMU**, and set the
+I2C pins/address in `config.h`. Put custom wall-following, PID, and sensor code
+in the hooks at the top of `Android.ino` (`onRobotRunning` and `onIMUUpdated`).

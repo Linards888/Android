@@ -1,24 +1,13 @@
 #pragma once
-
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
+#include "../../config.h"
 
-#define SERVICE_UUID          "deadf33f-a6a6-5155-c0de-a6a6f33f0001"
-#define CHARACTERISTIC_UUID   "dec887a8-991b-4501-9409-5b83528be174"
+// Nordic UART Service (NUS). TX is notify/read; RX is write.
+#define FOLKRACE_NUS_SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define FOLKRACE_NUS_RX_UUID      "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+#define FOLKRACE_NUS_TX_UUID      "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
-extern BLEServer *server;
-extern BLECharacteristic *characteristic;
-
-void initBLE();
-void notify(const char* fmt, ...);
-
-class MyServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) override;
-  void onDisconnect(BLEServer* pServer) override;
-};
-
-class MyCallbacks : public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) override;
-};
+void bleBegin();
+bool bleIsConnected();
+bool bleReadCommand(char* destination, size_t destinationSize);
+void notify(const char* format, ...);

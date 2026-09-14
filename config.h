@@ -1,117 +1,36 @@
 #pragma once
 
-/* ============================================================
- *  CONFIGURATION: SET FOR YOUR FOLKRACE TYPE
- * ============================================================
- *  Change the parameters below to match your specific
- *  Folkrace robot type before uploading.
- * ============================================================
- */
+/* Change this file for a new car. Put driving/sensor logic in Android.ino. */
 
+// ---- Features -------------------------------------------------------------
+#define FOLKRACE_ENABLE_BLE       1
+#define FOLKRACE_ENABLE_IMU       0   // Requires the FastIMU library
+#define FOLKRACE_ENABLE_SERIAL    1   // USB serial commands for testing
 
-//Select only one
-#define Is_Arduino     0 //wont work
-#define Is_Esp32       1
+// ---- BLE ------------------------------------------------------------------
+#define FOLKRACE_BLE_NAME         "Folkrace"
+// Standard Nordic UART Service: supported by nRF Connect and Serial Bluetooth Terminal.
 
-//Select one or multiple
-#define Is_Sharp       0
-#define Is_TOF         0
-#define Is_Ultrasonic  0
-#define Is_vl53l8cx    0 //don't know if i will get this working
+// ---- Motor driver ---------------------------------------------------------
+// A two-wheel differential drive. Each motor uses a driver with two inputs.
+#define FOLKRACE_MOTOR_COUNT      2
+#define FOLKRACE_LEFT_IN1         25
+#define FOLKRACE_LEFT_IN2         26
+#define FOLKRACE_RIGHT_IN1        27
+#define FOLKRACE_RIGHT_IN2        14
+#define FOLKRACE_LEFT_REVERSED    0
+#define FOLKRACE_RIGHT_REVERSED   0
+#define FOLKRACE_MAX_POWER        255
+#define FOLKRACE_DEAD_BAND        8
 
-//Select only one and servo if necesary
-#define OneMotor       0
-#define TwoMotors      0 //eather with or without servo
-#define tank           0 //4motors
-#define Is_servo       0 //for stearing
+// ---- IMU ------------------------------------------------------------------
+#define FOLKRACE_I2C_SDA          21
+#define FOLKRACE_I2C_SCL          22
+#define FOLKRACE_IMU_ADDRESS      0x68
+#define FOLKRACE_IMU_MPU6050      1
+#define FOLKRACE_IMU_MPU9250      2
+#define FOLKRACE_IMU_TYPE         FOLKRACE_IMU_MPU6050
 
-//Select features
-#define Is_blueTooth   0
-#define Is_IMU         0
-#define Memory         1 //(default 1) does the folk remembers parameters?
-#define Telemetry      0 //to PC with ground station
-#define spaceControl   0 //tries to understand track shape and where it's located on it
-
-//Select ready Algorithms
-#define Cloude 0 //not implemented yet
-#define MyAlgorithm 0 //not implemented yet
-#define DefoultAlgorithm 0 //not implemented yet
-
-
-
-
-/* ============================================================
- *  ⚠ IMPORTANT: WIRING & CONFIGURATION CHECKLIST ⚠
- * ============================================================
- *  Before uploading, verify ALL of the following:
- *    - Pins        → correct digital/analog pin assignments
- *    - Angles       → servo/motor angle offsets set correctly
- *    - Addresses    → I2C/SPI addresses match your devices
- *    - Names/Labels → variable & device names match hardware
- *    - Connections   → everything wired to the correct place
- * ============================================================
- */
-
-
-
-// ---- Sensor list ----
-// Add or remove a line to add/remove a physical sensor.
-// Format: X(name, xshutPin, i2cAddress, angleDegrees)
-
-  //   angleDegrees: 0 = front, 1-89 = front right sensors, 180 = back, 90 = Right, 179 = back right sensors
-#if Is_TOF
-  #define TOF_SENSOR_LIST \
-    X(front,      4, 0x30, 0)
-#endif
-
-
-// X(name, pin, angleDegrees)
-#if Is_Sharp
-  #define SHARP_SENSOR_LIST \
-    X(left,       1, -45)   \
-    X(right,      2, 45)
-#endif
-
-
-// X(name, echoPin, trigerPin, angleDegrees)
-#if Is_Ultrasonic
-  #define USONIC_SENSOR_LIST \
-    X(leftSide,       3, 6, -90)   \
-    X(rightSide,      5, 7, 90)
-#endif
-
-
-// ---- Drive list ----
-//For now only DC motors
-// Format: X(name, MotorPinA, MotorPinB)
-//   position label is just for your own reference, unused by logic
-
-#if OneMotor
-  #define MOTOR_LIST \
-    X(main, 9, 10)
-#endif
-
-#if TwoMotors
-  #define MOTOR_LIST \
-    X(right, 9, 10) \
-    X(left, 11, 12)
-#endif
-
-#if tank
-  #define MOTOR_LIST \
-    X(front_right, 9, 10) \
-    X(front_left, 11, 12) \
-    X(back_right, 13, A0) \
-    X(back_left, A1, A2) 
-#endif
-
-#if Is_servo
-  #define SERVO_PIN A3
-#endif
-
-// ---- Other Sensors ----
-
-#if Is_IMU
-  #define IMU_INIT_PIN 8
-  #define IMU_addres 0x68
-#endif
+// ---- Safety/control -------------------------------------------------------
+#define FOLKRACE_COMMAND_TIMEOUT_MS  600
+#define FOLKRACE_LOOP_PERIOD_MS       10

@@ -1,20 +1,5 @@
-#ifndef ROBOT_STATES_H
-#define ROBOT_STATES_H
-
+#pragma once
 #include <Arduino.h>
 
-// Define your 7 robot states
-enum RobotState {
-  IDLE,
-  READY,
-  CALIBRATION,
-  COUNTDOWN,
-  RUNNING,
-  FORWARD,
-  BACKWARDS
-};
-
-// Share the state variable across files
+enum RobotState : uint8_t { IDLE, READY, COUNTDOWN, RUNNING };
 extern RobotState currentState;
-
-#endif
