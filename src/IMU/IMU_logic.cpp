@@ -4,9 +4,9 @@
 #include <Wire.h>
 #include <FastIMU.h>
 
-#if FOLKRACE_IMU_TYPE == FOLKRACE_IMU_MPU6050
+#if IMU_TYPE == IMU_MPU6050
 static MPU6050 imu;
-#elif FOLKRACE_IMU_TYPE == FOLKRACE_IMU_MPU9250
+#elif IMU_TYPE == IMU_MPU9250
 static MPU9250 imu;
 #else
   #error "Select a supported FOLKRACE_IMU_TYPE in config.h"
@@ -16,8 +16,8 @@ static calData calibration = {};
 static bool ready = false;
 
 bool imuBegin() {
-  Wire.begin(FOLKRACE_I2C_SDA, FOLKRACE_I2C_SCL);
-  const int error = imu.init(calibration, FOLKRACE_IMU_ADDRESS);
+  Wire.begin(IMU_SDA_PIN, IMU_SCL_PIN);
+  const int error = imu.init(calibration, IMU_addres);
   ready = (error == 0);
   if (!ready) Serial.printf("IMU init failed: %d\\n", error);
   return ready;

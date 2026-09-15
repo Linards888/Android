@@ -1,12 +1,12 @@
 #include "Drive.h"
 
-#if FOLKRACE_MOTOR_COUNT != 2
-  #error "This starter drive supports two motors. Add custom multi-motor logic in Android.ino."
-#endif
+#define X(name, pinA, pinB) Motor motor_##name = {#name, pinA, pinB, false};
+  MOTOR_LIST
+#undef X
 
-static Motor leftMotor = {"left", FOLKRACE_LEFT_IN1, FOLKRACE_LEFT_IN2, FOLKRACE_LEFT_REVERSED};
-static Motor rightMotor = {"right", FOLKRACE_RIGHT_IN1, FOLKRACE_RIGHT_IN2, FOLKRACE_RIGHT_REVERSED};
-Motor* allmotors[] = {&leftMotor, &rightMotor};
+#define X(name, pinA, pinB) &motor_##name,
+Motor* allmotors[] = { MOTOR_LIST };
+#undef X
 const uint8_t MOTOR_COUNT = sizeof(allmotors) / sizeof(allmotors[0]);
 
 static int limitPower(int power) {
@@ -38,11 +38,17 @@ void setMotor(Motor& motor, int power) {
 }
 
 void setMotor(uint8_t index, int power) { if (index < MOTOR_COUNT) setMotor(*allmotors[index], power); }
-void driveTank(int leftPower, int rightPower) { setMotor(*allmotors[0], leftPower); setMotor(*allmotors[1], rightPower); }
+void driveTank(int leftPower, int rightPower) {
+#if TwoMotors
+  setMotor(motor_left, leftPower);
+  setMotor(motor_right, rightPower);
+#else
+  // Define your own mapping in Android.ino for one-motor or four-motor cars.
+  (void)leftPower; (void)rightPower;
+#endif
+}
 
 void driveArcade(int throttle, int steering) {
-  throttle = constrain(throttle, -FOLKRACE_MAX_POWER, FOLKRACE_MAX_POWER);
-  steering = constrain(steering, -FOLKRACE_MAX_POWER, FOLKRACE_MAX_POWER);
   driveTank(constrain(throttle + steering, -FOLKRACE_MAX_POWER, FOLKRACE_MAX_POWER),
             constrain(throttle - steering, -FOLKRACE_MAX_POWER, FOLKRACE_MAX_POWER));
 }
