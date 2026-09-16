@@ -3,69 +3,55 @@
 /* ============================================================
  *  CONFIGURATION: SET FOR YOUR FOLKRACE TYPE
  * ============================================================
- *  A new user should only need to edit this file for pins,
- *  fitted hardware and feature selection.  Driving logic,
- *  PID and sensor behaviour belong in Android.ino.
+ *  Change the parameters below to match your specific
+ *  Folkrace robot type before uploading.
  * ============================================================
  */
 
-
-// Select only one board
-#define Is_Arduino     0 // ESP32 firmware only
+//Select only one
+#define Is_Arduino     0 //wont work
 #define Is_Esp32       1
 
-// Select one or multiple distance-sensor types
+//Select one or multiple
 #define Is_Sharp       0
 #define Is_TOF         0
 #define Is_Ultrasonic  0
-#define Is_vl53l8cx    0 // not implemented yet
+#define Is_vl53l8cx    0 //don't know if i will get this working
 
-// Select exactly one drive type, and enable servo if needed
+//Select only one and servo if necesary
 #define OneMotor       0
-#define TwoMotors      1 // differential drive; can also have a servo
-#define tank           0 // four motors
-#define Is_servo       0 // steering servo
+#define TwoMotors      0 //eather with or without servo
+#define tank           0 //4motors
+#define Is_servo       0 //for stearing
 
-// Select features
-#define Is_blueTooth   1
+//Select features
+#define Is_blueTooth   0
 #define Is_IMU         0
-#define Memory         1 //(default 1) does the folk remember parameters?
+#define Memory         1 //(default 1) does the folk remembers parameters?
 #define Telemetry      0 //to PC with ground station
 #define spaceControl   0 //tries to understand track shape and where it's located on it
 
-// Select ready algorithms
+//Select ready Algorithms
 #define Cloude 0 //not implemented yet
 #define MyAlgorithm 0 //not implemented yet
 #define DefoultAlgorithm 0 //not implemented yet
 
-
 /* ============================================================
- *  WIRING & CONFIGURATION CHECKLIST
+ *  ⚠ IMPORTANT: WIRING & CONFIGURATION CHECKLIST ⚠
  * ============================================================
- *  Before uploading, verify:
- *    - Pins and motor direction
- *    - I2C addresses
- *    - Sensor lists
- *    - Driver and sensor connections
+ *  Before uploading, verify ALL of the following:
+ *    - Pins        → correct digital/analog pin assignments
+ *    - Angles       → servo/motor angle offsets set correctly
+ *    - Addresses    → I2C/SPI addresses match your devices
+ *    - Names/Labels → variable & device names match hardware
+ *    - Connections   → everything wired to the correct place
  * ============================================================
  */
-
-// ---- BLE / command control ----
-// The phone connection uses the standard Nordic UART Service.
-#define FOLKRACE_BLE_NAME              "Folkrace"
-#define FOLKRACE_ENABLE_SERIAL          1
-#define FOLKRACE_COMMAND_TIMEOUT_MS     600
-#define FOLKRACE_LOOP_PERIOD_MS         10
-
-// ---- Drive tuning ----
-// Power values accepted by DRIVE and TANK commands are -255 to 255.
-#define FOLKRACE_MAX_POWER              255
-#define FOLKRACE_DEAD_BAND              8
 
 // ---- Sensor list ----
 // Add or remove a line to add/remove a physical sensor.
 // Format: X(name, xshutPin, i2cAddress, angleDegrees)
-// angle: 0 = front, 90 = right, -90 = left, 180 = back.
+// angleDegrees: 0 = front, 90 = right, -90 = left, 180 = back
 #if Is_TOF
   #define TOF_SENSOR_LIST \
     X(front,      4, 0x30, 0)
@@ -78,7 +64,7 @@
     X(right,      2, 45)
 #endif
 
-// X(name, echoPin, triggerPin, angleDegrees)
+// X(name, echoPin, trigerPin, angleDegrees)
 #if Is_Ultrasonic
   #define USONIC_SENSOR_LIST \
     X(leftSide,       3, 6, -90)   \
@@ -86,8 +72,9 @@
 #endif
 
 // ---- Drive list ----
-// DC-motor driver inputs.  The name is also used in Arduino.ino.
-// Format: X(name, motorPinA, motorPinB)
+//For now only DC motors
+// Format: X(name, MotorPinA, MotorPinB)
+// position label is just for your own reference, unused by logic
 #if OneMotor
   #define MOTOR_LIST \
     X(main, 9, 10)
@@ -111,17 +98,8 @@
   #define SERVO_PIN A3
 #endif
 
-// ---- Other sensors ----
+// ---- Other Sensors ----
 #if Is_IMU
-  // FastIMU supported device selection and I2C wiring.
-  #define IMU_SDA_PIN 21
-  #define IMU_SCL_PIN 22
+  #define IMU_INIT_PIN 8
   #define IMU_addres 0x68
-  #define IMU_MPU6050 1
-  #define IMU_MPU9250 2
-  #define IMU_TYPE IMU_MPU6050
 #endif
-
-// Compatibility names used by the reusable modules.
-#define FOLKRACE_ENABLE_BLE Is_blueTooth
-#define FOLKRACE_ENABLE_IMU Is_IMU
