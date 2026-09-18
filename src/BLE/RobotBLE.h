@@ -1,24 +1,21 @@
 #pragma once
-
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
+#include "config.h"
 
-#define SERVICE_UUID          "deadf33f-a6a6-5155-c0de-a6a6f33f0001"
-#define CHARACTERISTIC_UUID   "dec887a8-991b-4501-9409-5b83528be174"
+// ============================================================
+//  RobotBLE — everything Bluetooth lives here and only here.
+// ============================================================
+//  Android.ino calls ble_init() once in setup() (if FEATURE_BLUETOOTH
+//  is on) and never touches BLE again. Incoming writes are parsed
+//  into "command args" and handed to commands.cpp::handle_command().
+//  Outgoing text (command replies, log lines, ...) goes out via
+//  src/Utils/Notify.h's notify() — this module just registers
+//  itself as Notify's extra sink, so nothing else needs to know
+//  BLE exists.
+// ============================================================
 
-extern BLEServer *server;
-extern BLECharacteristic *characteristic;
+#if FEATURE_BLUETOOTH
 
-void initBLE();
-void notify(const char* fmt, ...);
+void ble_init();
 
-class MyServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) override;
-  void onDisconnect(BLEServer* pServer) override;
-};
-
-class MyCallbacks : public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) override;
-};
+#endif

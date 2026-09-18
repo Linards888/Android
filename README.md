@@ -30,9 +30,9 @@
 <h3 align="center">ESP Folkrace Control System</h3>
 
   <p align="center">
-    Real-time PID control, BLE tuning, and wireless telemetry for ESP-based Folkrace robots.
+    Real-time PID control, BLE tuning, and wireless telemetry for ESP-based Folkrace robots — one codebase, any number of robots.
     <br />
-    <a href="https://github.com/Linards888/Android/Documentation"><strong>Explore the docs »</strong></a>
+    <a href="docs/Arhitecture.md"><strong>Explore the docs »</strong></a>
     <br /><br />
     <a href="https://github.com/Linards888/Android/images/Demo">View Demo</a>
     ·
@@ -57,10 +57,6 @@
     </li>
     <li>
       <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#system-overview">System Overview</a></li>
@@ -81,10 +77,9 @@
     <img src="docs/images/RobotFolk.png" alt="Logo" width="400" height="400">
   </a>
 
-This project is a complete control and telemetry system for ESP-based Folkrace robots. It combines real-time PID control, wireless communication, and live BLE tuning into one cohesive setup — so instead of reflashing firmware 50 times to tweak a gain value, you just dial it in from your phone and watch the robot either nail the corner or redecorate the wall (but now scientifically 📈).
+This project is a complete control system for ESP-based Folkrace robots. It combines real-time PID control, live BLE tuning, and a hardware abstraction layer into one cohesive setup — so instead of reflashing firmware 50 times to tweak a gain value, or maintaining a separate copy of the whole project per robot you own, you dial values in from your phone and swap robots by changing one config file.
 
-The system uses two ESPs: one on the robot running the control logic, and one connected to your PC acting as a telemetry receiver — giving you real-time data logging, plotting, and analysis without any wires trailing behind your robot.
-
+</div>
 
 ---
 
@@ -94,13 +89,19 @@ The system uses two ESPs: one on the robot running the control logic, and one co
   Stable, tunable control loop for motor management and line/wall following.
 
 - **Live BLE Tuning**  
-  Adjust Kp, Ki, and Kd in real time over Bluetooth Low Energy using your phone or PC — no reflashing needed.
+  `get`/`set`/`list`/`toggle` *any* registered parameter in real time over Bluetooth Low Energy — no reflashing needed. Adding a new tunable is one line of code (`REGISTER_PARAM(...)`) and it's automatically BLE-exposed, listed, and flash-saved.
 
-- **Wireless Telemetry with PC Logging & Plotting**  
-  Streams sensor data, PID state, and runtime info over radio (ESP-32 or similar) to a stationary receiver.
+- **One codebase, many robots**  
+  Pins, sensors, motor/steering layout and optional features all live in a small `configs/config_<robot>.h` file per physical robot — switch or add robots by changing one line in `config.h`, never by copying the project. See `configs/config_template.h`.
+
+- **Sensor- and motor-agnostic logic**  
+  `Android.ino` reads sensors with `dist("name")` and drives with `drive_set(speed, steer)` regardless of whether that's a Sharp IR or a VL53L0X underneath, or a 1/2/4-motor, brushed/brushless, differential- or servo-steered chassis. Swap hardware without touching the control logic.
+
+- **Serial Telemetry for PC Logging & Plotting**  
+  Streams sensor/PID/state data as CSV over Serial for any PC script or plotter to consume.
 
 - **Folkrace positioning on the track**  
-  A setting that when enabled can understand its position in track and how the track looks like.
+  A setting that when enabled can understand its position in track and how the track looks like. **Scaffolded, not implemented yet** — see `src/spaceAverenes/space.h`.
 
 ---
 
@@ -108,20 +109,15 @@ The system uses two ESPs: one on the robot running the control logic, and one co
 
 * [ESP32](https://www.espressif.com/en/products/socs/esp32) / ESP platform
 * [Arduino Framework](https://www.arduino.cc/)
-* [ESP-32](https://www.espressif.com/en/products/software/esp-now/overview) wireless communication
 * Bluetooth Low Energy (BLE)
-* Serial and GUI interface for PC data forwarding
-
+* Serial interface for PC data logging
 
 ---
 
 <!-- GETTING STARTED -->
-<!--
 ## Getting Started
 
-Instructions
-
--->
+See [`docs/Necessities.md`](docs/Necessities.md) for exactly what hardware/software/libraries you need, then [`docs/Setup.md`](docs/Setup.md) for step-by-step install, configuration, and upload instructions. [`docs/Arhitecture.md`](docs/Arhitecture.md) explains how the codebase is put together and has a task-oriented "How do I...?" section for common changes (add a sensor, add a command, add a tunable parameter, build for a new robot).
 
 ---
 
@@ -148,24 +144,27 @@ Instructions
 └──────────────────────────────────┘    └───────────────────────────────────────┘                    
 ```
 
+Today's firmware implements the left-hand box (the robot itself, over BLE to
+a phone) plus plain Serial CSV telemetry. The dedicated ESP-NOW "ground
+station" receiver on the right is not built yet — see the Roadmap.
 
 ---
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] configuration.h and logic
-- [x] tof logic
-- [x] BLE logic BUT I WILL REDO
-- [ ] Working demo(hopefully), so its more visual, not just code.
-- [ ] Memory logic
-- [x] Drive system
-- [x] Folkrace states
-- [ ] PID logic & Matematics/Calculations
-- [ ] Calibrations
-- [ ] Space Avereness
+- [x] config.h / configs/ per-robot configuration system
+- [x] ToF (VL53L0X), Sharp IR, and ultrasonic sensor logic behind one `dist()` API
+- [x] BLE logic — rebuilt: generic parameter registry (`get`/`set`/`list`/`toggle`) instead of one command per value
+- [x] Memory logic (flash save/restore of every tunable)
+- [x] Drive system — 1/2/4 motor, brushed/brushless, differential/servo steering
+- [x] Folkrace states (IDLE/READY/CALIBRATING/COUNTDOWN/RUNNING + manual test-drive states)
+- [x] PID logic & math
+- [x] Calibrations (live sensor dump + IMU bias calibration)
+- [ ] Working demo (hopefully), so its more visual, not just code.
+- [ ] Space Awareness — scaffolded only, see `src/spaceAverenes/space.h`
 - [ ] Prob something else
-- [ ] Ground station
+- [ ] Ground station (dedicated ESP-NOW/radio receiver + PC app)
 - [ ] OTA firmware updates
 
 See the [open issues](https://github.com/Linards888/Android/issues) for the full list of proposed features and known bugs.

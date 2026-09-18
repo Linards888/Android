@@ -1,26 +1,31 @@
 #pragma once
 #include <Arduino.h>
+#include <VL53L0X.h>
 #include "config.h"
+#include "DistanceSensors.h"
 
-#if Is_TOF
-  struct tofSensor {
+// Internal — Android.ino should use src/Sensors/DistanceSensors.h (dist(name))
+// instead of this file directly.
+
+#if SENSOR_TOF_ENABLED
+
+struct TofSensor {
+    DistReading r;
     VL53L0X sensor;
-    const char* name;
-    uint8_t xshutPin;
+    uint8_t xshutPin;   // PIN_NONE if this is the only ToF sensor on the bus
     uint8_t address;
-    int16_t angle;
-  };
+};
 
-  #define X(name, pin, addr, angle) extern tofSensor tof_##name;
+#define X(name, xshutPin, addr, angle, role, weight) extern TofSensor tof_##name;
     TOF_SENSOR_LIST
-  #undef X
+#undef X
 
-  extern TofSensor* allTofSensors[];
-  extern const uint8_t TOF_SENSOR_COUNT;
+extern TofSensor* tof_all[];
+extern const uint8_t TOF_SENSOR_COUNT;
 
-  void tof_setup();
-  void tof_readAll();
-  uint16_t tof_read(TofSensor* s);        // read just one sensor, by pointer
-  uint16_t tof_read(const char* name);    // read just one sensor, by name
-  TofSensor* tof_getByName(const char* name);
+void tof_init();
+void tof_update();
+DistReading* tof_find(const char* name);
+void tof_register_params(); // registers "w_<name>" for every sensor's steering weight
+
 #endif

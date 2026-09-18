@@ -1,82 +1,87 @@
 #include "tof_logic.h"
+#include "../Utils/Notify.h"
+#include "../Utils/ParamRegistry.h"
+#include <string.h>
 
-//Es nesaprotu tik daudz, vai arī ja saprotu tad aizmirsu un tagat vairs neatceros, lūdzu palīdzat man
+#if SENSOR_TOF_ENABLED
 
-// Generates: TofSensor tof_front = {VL53L0X(), "front", 4, 0x30, 0, 0};  etc.
-  #define X(name, pin, addr, angle) TofSensor tof_##name = { VL53L0X(), #name, pin, addr, angle, 0 };
+#define X(name, xshutPin, addr, angle, role, weight) \
+    TofSensor tof_##name = { { #name, role, weight, 0.0f, false }, VL53L0X(), xshutPin, addr };
     TOF_SENSOR_LIST
-  #undef X
+#undef X
 
-  // Build a pointer array so setup/read loops can iterate all sensors generically
-  #define X(name, pin, addr, angle) &tof_##name,
-    TofSensor* allTofSensors[] = { TOF_SENSOR_LIST };
-  #undef X
-  const uint8_t TOF_SENSOR_COUNT = sizeof(allTofSensors) / sizeof(allTofSensors[0]);
+#define X(name, xshutPin, addr, angle, role, weight) &tof_##name,
+    TofSensor* tof_all[] = { TOF_SENSOR_LIST };
+#undef X
 
-  void tof_setup() {
-    Wire.begin();
+const uint8_t TOF_SENSOR_COUNT = sizeof(tof_all) / sizeof(tof_all[0]);
 
-    // Step 1: hold every sensor's XSHUT low (disabled)
+static const float FILTER_ALPHA = 0.5f;
+
+void tof_init() {
+    // Only sensors with a real xshutPin need the "hold low, wake one at a
+    // time, reassign address" dance — that's only necessary when more than
+    // one VL53L0X shares the bus. A lone sensor (xshutPin == PIN_NONE) is
+    // just initialized directly at its default address.
+    bool any_xshut = false;
     for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      pinMode(allTofSensors[i]->xshutPin, OUTPUT);
-      digitalWrite(allTofSensors[i]->xshutPin, LOW);
+        if (tof_all[i]->xshutPin != PIN_NONE) {
+            any_xshut = true;
+            pinMode(tof_all[i]->xshutPin, OUTPUT);
+            digitalWrite(tof_all[i]->xshutPin, LOW);
+        }
     }
+    if (any_xshut) delay(10);
 
-    // Step 2: wake sensors one at a time, assign each a unique address
     for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      digitalWrite(allTofSensors[i]->xshutPin, HIGH);
-      delay(10);
-      allTofSensors[i]->sensor.setAddress(allTofSensors[i]->address);
-      allTofSensors[i]->sensor.init();
-    }
-  }
+        TofSensor* s = tof_all[i];
 
-  void tof_readAll() {
+        if (s->xshutPin != PIN_NONE) {
+            digitalWrite(s->xshutPin, HIGH);
+            delay(10);
+        }
+
+        if (!s->sensor.init()) {
+            notify("TOF sensor '%s' failed to init\n", s->r.name);
+            continue;
+        }
+
+        if (s->xshutPin != PIN_NONE) {
+            s->sensor.setAddress(s->address);
+        }
+
+        s->sensor.setTimeout(50);
+        s->sensor.startContinuous();
+    }
+}
+
+void tof_update() {
     for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      allTofSensors[i]->lastReadingMM = allTofSensors[i]->sensor.readRangeSingleMillimeters();
-      Serial.print(allTofSensors[i]->name);
-      Serial.print(" ("); Serial.print(allTofSensors[i]->angle); Serial.print("deg): ");
-      Serial.println(allTofSensors[i]->lastReadingMM);
+        TofSensor* s = tof_all[i];
+        uint16_t raw = s->sensor.readRangeContinuousMillimeters();
+
+        if (s->sensor.timeoutOccurred()) {
+            // keep the last good value rather than smoothing in a bogus reading
+            continue;
+        }
+
+        DistReading& r = s->r;
+        r.value_mm = r.valid ? (raw * FILTER_ALPHA + r.value_mm * (1.0f - FILTER_ALPHA)) : (float)raw;
+        r.valid = true;
     }
-  }
+}
 
-  // Reads ONE sensor, updates its cached value, returns the reading.
-  uint16_t tof_read(TofSensor* s) {
-    if (s == nullptr) return 0xFFFF;   // invalid pointer, return "out of range" style value
-
-    s->lastReadingMM = s->sensor.readRangeSingleMillimeters();
-
-    if (s->sensor.timeoutOccurred()) {
-      Serial.print("TOF timeout: ");
-      Serial.println(s->name);
-    }
-
-    return s->lastReadingMM;
-  }
-
-  // Convenience overload: read by name instead of pointer
-  uint16_t tof_read(const char* name) {
-    return tof_read(tof_getByName(name));
-  }
-
-  TofSensor* tof_getByName(const char* name) {
+DistReading* tof_find(const char* name) {
     for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      if (strcmp(allTofSensors[i]->name, name) == 0) {
-        return allTofSensors[i];
-      }
+        if (strcmp(tof_all[i]->r.name, name) == 0) return &tof_all[i]->r;
     }
     return nullptr;
-  }
+}
+
+void tof_register_params() {
+    #define X(name, xshutPin, addr, angle, role, w_) REGISTER_PARAM_NAMED("w_" #name, tof_##name.r.weight);
+        TOF_SENSOR_LIST
+    #undef X
+}
 
 #endif
-
-
-/* ---- Tof Usage ----
-
-//By name
-uint16_t d = tof_read("front");
-
-//by pointer
-uint16_t d = tof_read(&tof_front);
-
-*/
