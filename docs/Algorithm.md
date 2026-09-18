@@ -1,11 +1,12 @@
-# Algorithm
+# Algorithm (a worked example)
 
-This is what `onRunning()` in `Android.ino` actually does, step by step,
-every control loop tick while the robot is in `Mode::RUNNING`. If you want a
-completely different driving algorithm (line-following instead of
-wall-following, say), `onRunning()` and its two small helpers
-(`computeSteeringError`, `computeForwardSpeed`) are the only things you need
-to replace - nothing else in the codebase needs to change.
+`onRunning()` in `Android.ino` ships **blank** - you write your own driving
+algorithm there (see [Android_ino.md](Android_ino.md)). This page walks
+through one complete, working example - PID wall-following with a
+non-blocking dead-end reverse+turn - step by step, so you have something
+concrete to study, adapt, or paste in wholesale as your own starting point
+(the exact code is at the bottom). Nothing here is currently running unless
+you put it there yourself.
 
 ## Sensor naming
 
@@ -37,7 +38,7 @@ int16_t rightDist = sensor_read("right");
 ```
 
 **3. Dead end ahead?**
-If `frontDist` is valid and closer than `state.dist_reverse` (config.h
+If `frontDist` is valid and closer than `state.dist_reverse` (Defaults.h
 `DEFAULT_DIST_REVERSE`, mm), the robot hands off to the reverse+turn
 maneuver instead of continuing to steer normally (see below).
 
@@ -98,4 +99,76 @@ The manual `180` BLE command runs the same turning phase, but for the
 longer `MANEUVER_180_MS` and without the reversing step first - useful for
 manually spinning the robot around on the bench.
 
-All three durations are in `config.h`.
+All three durations are in `Defaults.h`.
+
+## Copy-paste starting point
+
+If you'd rather start from this than a blank page, paste the following
+into `Android.ino`, replacing the empty `onRunning()` there (and adding the
+two helpers above it, the same way the comments in `Android.ino` suggest):
+
+```cpp
+static int computeSteeringError(int16_t leftDist, int16_t rightDist) {
+  int error = 0;
+
+  if (leftDist >= 0 && rightDist >= 0) {
+    error = (int)(rightDist * state.pid.k_right_side - leftDist * state.pid.k_left_side);
+  } else if (leftDist >= 0) {
+    error = (int)((state.dist_far - leftDist) * state.pid.k_left);
+  } else if (rightDist >= 0) {
+    error = (int)((rightDist - state.dist_far) * state.pid.k_right);
+  }
+
+  return constrain(error, -state.dist_constrain, state.dist_constrain);
+}
+
+static int computeForwardSpeed() {
+  int speed = state.speed_forward;
+
+#if Is_IMU
+  if (state.imu_enabled && state.slope_boost && imu_pitch() > state.slope_threshold) {
+    speed += (int)(state.k_pitch_running * imu_pitch());
+  }
+#endif
+
+  return constrain(speed, state.speed_min, state.speed_max);
+}
+
+static void onRunning(float dtSeconds) {
+  if (maneuver_active()) {
+    maneuver_service();
+    return;
+  }
+  if (state.debug.do_manual_180) {
+    state.debug.do_manual_180 = false;
+    maneuver_start_180();
+    maneuver_service();
+    return;
+  }
+
+  int16_t frontDist = sensor_read("front");
+  int16_t leftDist  = sensor_read("left");
+  int16_t rightDist = sensor_read("right");
+
+  if (frontDist >= 0 && frontDist <= state.dist_reverse) {
+    maneuver_start_reverse_turn(leftDist, rightDist);
+    maneuver_service();
+    return;
+  }
+
+  int error = computeSteeringError(leftDist, rightDist);
+  float steer = steeringPID.update((float)error, dtSeconds);
+
+#if Is_IMU
+  if (state.imu_enabled) {
+    steer += imu_accel_x() * state.k_accel_nudge;
+  }
+#endif
+
+  drive_apply(computeForwardSpeed(), steer);
+}
+```
+
+This is exactly the algorithm the steps above describe - use it as-is,
+tune it over BLE, or use it as a reference while writing something of your
+own.

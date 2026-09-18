@@ -1,110 +1,94 @@
 /* ============================================================
  *  Android.ino - Folkrace main sketch
  * ============================================================
- *  Hardware selection, pins, addresses and starting tuning values
- *  live in config.h - that's the other file you edit. Everything
- *  under src/ is drivers/plumbing (motor PWM, sensor reading, BLE
- *  wiring, flash storage) that this file calls into but you
- *  normally don't need to open.
+ *  Hardware selection, pins and addresses live in config.h. Starting
+ *  tuning values and calibration constants live in Defaults.h.
+ *  "Libraries.h" below pulls in every other library/driver your
+ *  config.h selections actually need (motors, sensors, IMU, etc.) -
+ *  see src/Utils/Libraries.h if you're curious how.
  *
- *  THIS file is the robot's actual behaviour. It's organized as
- *  one function per state:
+ *  THIS file is the robot's actual behaviour. It's organized as one
+ *  function per state:
  *
  *      onIdle        - motors off, just sitting there
  *      onReady       - armed, waiting for the BLE "start" command
- *      onCountdown   - short delay after "start", before it goes
+ *      onCountdown   - short delay after "start" (state.start_delay_ms,
+ *                      DEFAULT_START_DELAY_MS in Defaults.h), before it goes
  *      onCalibration - runs once, then drops back to Idle
- *      onRunning     - actually drives the track (see below)
+ *      onForward     - bench-test: drive straight forward
+ *      onBackwards   - bench-test: drive straight backward
+ *      onRunning     - actually drives the track - YOU write this one
  *
  *  loop() just asks "which state are we in?" and calls the matching
  *  function. To change what a state does, edit its function - you
  *  don't need to touch anything else.
  *
- *  onRunning() is the one you'll come back to most: it's the whole
- *  track-following algorithm, in one place, read top to bottom.
- *  See docs/Algorithm.md for a full walkthrough of what it does and
- *  why, and docs/Arhitecture.md for how this file fits together
- *  with everything under src/.
+ *  onRunning() is intentionally blank. Read the sensors with
+ *  sensor_read(), decide on a steering value and a speed however you
+ *  like (a PID loop, if/else rules, whatever you want to write), and
+ *  hand the result to drive_apply(). See docs/Algorithm.md for a full
+ *  worked example (PID wall-following) you can study or paste in as a
+ *  starting point, and docs/Android_ino.md for the full toolbox of
+ *  functions you can call from here.
  * ============================================================
  */
 
+#include "DeltaTime.h"
+#include "RobotState.h"
 #include "Libraries.h"
+#include "RobotBLE.h"
+#include "Calibration.h"
 
 RobotState state;
 static DeltaTime dt;
-static PIDController steeringPID;
+static PIDController steeringPID; // handy if you want a PID loop - see onRunning() below
 
 
-// ---- onRunning() and its helpers - see docs/Algorithm.md ----
-
-static int computeSteeringError(int16_t leftDist, int16_t rightDist) {
-  int error = 0;
-
-  if (leftDist >= 0 && rightDist >= 0) {
-    error = (int)(rightDist * state.pid.k_right_side - leftDist * state.pid.k_left_side);
-  } else if (leftDist >= 0) {
-    error = (int)((state.dist_far - leftDist) * state.pid.k_left);
-  } else if (rightDist >= 0) {
-    error = (int)((rightDist - state.dist_far) * state.pid.k_right);
-  }
-
-  return constrain(error, -state.dist_constrain, state.dist_constrain);
-}
-
-static int computeForwardSpeed() {
-  int speed = state.speed_forward;
-
-#if Is_IMU
-  if (state.imu_enabled && state.slope_boost && imu_pitch() > state.slope_threshold) {
-    speed += (int)(state.k_pitch_running * imu_pitch());
-  }
-#endif
-
-  return constrain(speed, state.speed_min, state.speed_max);
-}
-
+// ---- onRunning() - THIS IS WHERE YOUR DRIVING ALGORITHM GOES ----
+// Nothing is implemented here on purpose - write your own sensor reading,
+// steering algorithm (PID or otherwise) and drive calls. See
+// docs/Algorithm.md for a complete worked example.
 static void onRunning(float dtSeconds) {
-  if (maneuver_active()) {
-    maneuver_service();
-    return;
-  }
-  if (state.debug.do_manual_180) {
-    state.debug.do_manual_180 = false;
-    maneuver_start_180();
-    maneuver_service();
-    return;
-  }
+  // 1. Read whichever sensors you named in config.h, e.g.:
+  //      int16_t frontDist = sensor_read("front");
+  //      int16_t leftDist  = sensor_read("left");
+  //      int16_t rightDist = sensor_read("right");
+  //    Each call returns millimeters, or -1 if that sensor isn't configured.
 
-  int16_t frontDist = sensor_read("front");
-  int16_t leftDist  = sensor_read("left");
-  int16_t rightDist = sensor_read("right");
+  // 2. Decide on a steering correction (positive = turn right). If you want
+  //    a PID loop, `steeringPID` is already declared above:
+  //      float steer = steeringPID.update(error, dtSeconds);
 
-  if (frontDist >= 0 && frontDist <= state.dist_reverse) {
-    maneuver_start_reverse_turn(leftDist, rightDist);
-    maneuver_service();
-    return;
-  }
+  // 3. Decide on a forward speed, e.g. state.speed_forward, clamped to
+  //    state.speed_min..state.speed_max.
 
-  int error = computeSteeringError(leftDist, rightDist);
-  float steer = steeringPID.update((float)error, dtSeconds);
+  // 4. Drive:
+  //      drive_apply(forwardSpeed, steer);
+}
 
-#if Is_IMU
-  if (state.imu_enabled) {
-    steer += imu_accel_x() * state.k_accel_nudge;
-  }
-#endif
 
-  drive_apply(computeForwardSpeed(), steer);
+// ---- Manual bench-test states - triggered over BLE, see docs/BLE_Commands.md ----
+
+static void onForward() {
+  drive_apply(state.speed_forward, 0);
+}
+
+static void onBackwards() {
+  drive_apply(-state.speed_reverse, 0);
 }
 
 
 // ---- Every other state - see docs/Arhitecture.md ----
 
 static void onIdle() {
+  // Nothing is running, no motors, no driving logic - the robot just sits
+  // here. The only BLE commands that work are housekeeping ones (state,
+  // help, tuning, forward/backward/calibrate) until you send "ready".
   drive_reset();
 }
 
 static void onReady() {
+  // Armed and waiting for the BLE "start" command.
   drive_reset();
 }
 
@@ -121,6 +105,7 @@ static void onCountdown() {
 }
 
 static void onCalibration() {
+  Serial.println("Calibrating sensors...");
   run_calibration();
   state.mode = Mode::IDLE;
 }
@@ -132,7 +117,7 @@ void setup() {
   Serial.begin(115200);
 
 #if Memory
-  load_state();
+  load_state(); // reads any previously-saved BLE tuning values from flash
 #endif
 
   motorsetup();
@@ -166,6 +151,8 @@ void loop() {
     case Mode::READY:       onReady();       break;
     case Mode::COUNTDOWN:   onCountdown();   break;
     case Mode::CALIBRATION: onCalibration(); break;
+    case Mode::FORWARD:     onForward();     break;
+    case Mode::BACKWARDS:   onBackwards();   break;
     case Mode::RUNNING:
       steeringPID.configure(state.pid.kp, state.pid.ki, state.pid.kd);
       onRunning(dtSeconds);

@@ -149,6 +149,18 @@ void cmd_calibrate(char* args) {
   state.mode = Mode::CALIBRATION;
 }
 
+// ---- forward / backward - manual bench-test drive, see Android.ino ----
+
+void cmd_forward(char* args) {
+  state.mode = Mode::FORWARD;
+  notify("forward\n");
+}
+
+void cmd_backward(char* args) {
+  state.mode = Mode::BACKWARDS;
+  notify("backwards\n");
+}
+
 void cmd_state(char* args) {
   notify("mode %d kp %.4f ki %.4f kd %.4f k_reverse %.4f\n",
     (int)state.mode, state.pid.kp, state.pid.ki, state.pid.kd, state.k_reverse);
@@ -168,8 +180,10 @@ void cmd_help(char* args);
 static CommandEntry command_list[] = {
   {"ready",     cmd_ready,     STATE_BIT(Mode::IDLE)},
   {"start",     cmd_start,     STATE_BIT(Mode::READY)},
-  {"stop",      cmd_stop,      STATE_BIT(Mode::COUNTDOWN) | STATE_BIT(Mode::RUNNING)},
+  {"stop",      cmd_stop,      STATE_BIT(Mode::COUNTDOWN) | STATE_BIT(Mode::RUNNING) | STATE_BIT(Mode::FORWARD) | STATE_BIT(Mode::BACKWARDS)},
   {"calibrate", cmd_calibrate, STATE_BIT(Mode::IDLE)},
+  {"forward",   cmd_forward,   STATE_BIT(Mode::IDLE) | STATE_BIT(Mode::READY)},
+  {"backward",  cmd_backward,  STATE_BIT(Mode::IDLE) | STATE_BIT(Mode::READY)},
   {"state",     cmd_state,     ALL_STATES},
   {"log",       cmd_log,       ALL_STATES},
   {"k",         cmd_k,         ALL_STATES},

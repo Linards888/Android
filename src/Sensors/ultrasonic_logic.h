@@ -11,11 +11,7 @@
     uint16_t lastReadingMM;
   };
 
-  #define X(name, trigPin, echoPin, angle) extern UltrasonicSensor usonic_##name;
-    USONIC_SENSOR_LIST
-  #undef X
-
-  extern UltrasonicSensor* allUsonicSensors[];
+  extern UltrasonicSensor allUsonicSensors[];
   extern const uint8_t USONIC_SENSOR_COUNT;
 
   void ultrasonic_setup();

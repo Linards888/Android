@@ -15,12 +15,7 @@
     uint16_t lastReadingMM;
   };
 
-  // Generates: extern TofSensor tof_front; etc, one per line in TOF_SENSOR_LIST (config.h)
-  #define X(name, pin, addr, angle) extern TofSensor tof_##name;
-    TOF_SENSOR_LIST
-  #undef X
-
-  extern TofSensor* allTofSensors[];
+  extern TofSensor allTofSensors[];
   extern const uint8_t TOF_SENSOR_COUNT;
 
   void tof_setup();

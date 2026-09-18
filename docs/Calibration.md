@@ -5,7 +5,7 @@ See [BLE_Commands.md](BLE_Commands.md) for the `calibrate` and `log` commands us
 ## TOF (VL53L0X)
 
 Nothing to calibrate by hand. Each sensor is assigned its I2C address (from
-`TOF_SENSOR_LIST` in `config.h`) automatically at boot, one at a time over
+`TOF_SENSORS[]` in `config.h`) automatically at boot, one at a time over
 its XSHUT pin. If a sensor fails to initialize you'll see `TOF init failed:
 <name>` on the Serial Monitor - double check its XSHUT pin and wiring.
 
@@ -24,9 +24,9 @@ track needs:
    `Serial.println(analogRead(<pin>));`, since `sensor_read()` returns
    already-converted millimeters, not the raw value calibration needs.
 3. Enter that raw value as `SHARP_ADC_AT_NEAR` and the distance as
-   `SHARP_NEAR_MM` in `config.h`.
+   `SHARP_NEAR_MM` in `Defaults.h`.
 4. Repeat at a known **far** distance (e.g. 800mm), filling in
-   `SHARP_ADC_AT_FAR` / `SHARP_FAR_MM`.
+   `SHARP_ADC_AT_FAR` / `SHARP_FAR_MM` (also in `Defaults.h`).
 5. Re-upload. Readings between (and a bit beyond) those two points will now
    read out in millimeters; `sharp_read()` clamps to the near/far range so a
    noisy reading can't report an impossible distance.

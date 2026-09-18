@@ -7,15 +7,19 @@
 //   IDLE        motors off, sensors idle. Only housekeeping BLE commands work.
 //   READY       armed, waiting for the "start" command.
 //   COUNTDOWN   short delay after "start", before RUNNING begins.
-//   RUNNING     actually driving the track.
+//   RUNNING     actually driving the track - this is where YOUR algorithm goes.
 //   CALIBRATION runs the (re)calibration routine once, then returns to IDLE.
+//   FORWARD     bench-test: drives straight forward at speed_forward.
+//   BACKWARDS   bench-test: drives straight backward at speed_reverse.
 //
 enum class Mode : uint8_t {
   IDLE = 0,
   READY,
   COUNTDOWN,
   RUNNING,
-  CALIBRATION
+  CALIBRATION,
+  FORWARD,
+  BACKWARDS
 };
 
 // Bitmask helpers used to say which modes a BLE command is allowed in.

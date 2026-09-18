@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h> // uint8_t/int16_t types + pin names (A0, A1, ...) used by the config structs below
 
 /* ============================================================
  *  CONFIGURATION - describe the robot you actually built
@@ -12,10 +13,11 @@
  *    1. HARDWARE - board, sensors, drive, optional features (below)
  *    2. WIRING - pins/addresses/angles for the sensors and motors
  *       you just turned on, further down this file
- *    3. STARTING TUNING VALUES - PID gains, speeds, distances, all
- *       the way at the bottom - reasonable defaults are already
- *       filled in, and every one of them can also be changed live
- *       over BLE later without re-uploading
+ *
+ *  Starting tuning values (PID gains, speeds, distances, ...) live
+ *  in Defaults.h, not here - reasonable defaults are already filled
+ *  in there, and every one of them can also be changed live over
+ *  BLE without re-uploading. You don't need to open that file either.
  *
  *  Leaving everything below at 0 is intentional: the build will
  *  refuse to compile with a clear message telling you what to set,
@@ -73,35 +75,39 @@
 // works if you read it by hand, it's just not used by the built-in algorithm.
 //   angleDegrees: 0 = front, 1-89 = front-right, 90 = right, 180 = back, -1..-89 = front-left, -90 = left
 
+// You don't need to understand the "static const struct {...}" part below -
+// just copy an existing line inside the { } list and change the values.
+// One line = one sensor/motor. Add a line to add one, delete a line to
+// remove one.
+
 // ---- TOF (VL53L0X) sensors --------------------------------------------
-// Format: X(name, xshutPin, i2cAddress, angleDegrees)
+// One line per sensor: { "name", xshutPin, i2cAddress, angleDegrees }
 #if Is_TOF
-  #define TOF_SENSOR_LIST \
-    X(front,      4, 0x30, 0)
+  static const struct { const char* name; uint8_t xshutPin; uint8_t i2cAddress; int16_t angle; } TOF_SENSORS[] = {
+    { "front",      4, 0x30, 0 },
+  };
 #endif
 
 // ---- Sharp IR sensors ---------------------------------------------------
-// Format: X(name, analogPin, angleDegrees)
+// One line per sensor: { "name", analogPin, angleDegrees }
 #if Is_Sharp
-  #define SHARP_SENSOR_LIST \
-    X(left,       1, -45)   \
-    X(right,      2, 45)
+  static const struct { const char* name; uint8_t pin; int16_t angle; } SHARP_SENSORS[] = {
+    { "left",       1, -45 },
+    { "right",      2, 45 },
+  };
 
-  // Two-point calibration (see docs/Calibration.md for how to measure these):
-  // Sharp sensors aren't linear, but a straight line between two measured
-  // points is close enough over the ~10-80cm range a folkrace track needs.
-  #define SHARP_ADC_AT_NEAR   90    // raw analogRead() with an object at SHARP_NEAR_MM
-  #define SHARP_NEAR_MM       100
-  #define SHARP_ADC_AT_FAR    520   // raw analogRead() with an object at SHARP_FAR_MM
-  #define SHARP_FAR_MM        800
+  // This sensor's two-point calibration constants (SHARP_ADC_AT_NEAR/FAR,
+  // SHARP_NEAR_MM/FAR_MM) live in Defaults.h, not here - see
+  // docs/Calibration.md if you need to (re)measure them.
 #endif
 
 // ---- Ultrasonic (HC-SR04 style) sensors ---------------------------------
-// Format: X(name, trigPin, echoPin, angleDegrees)
+// One line per sensor: { "name", trigPin, echoPin, angleDegrees }
 #if Is_Ultrasonic
-  #define USONIC_SENSOR_LIST \
-    X(leftSide,       6, 3, -90)   \
-    X(rightSide,      7, 5, 90)
+  static const struct { const char* name; uint8_t trigPin; uint8_t echoPin; int16_t angle; } USONIC_SENSORS[] = {
+    { "leftSide",       6, 3, -90 },
+    { "rightSide",      7, 5, 90 },
+  };
 
   #define USONIC_TIMEOUT_US 25000 // ~4m round trip; readings past this count as "nothing there"
 #endif
@@ -109,25 +115,28 @@
 // ---- Motors --------------------------------------------------------------
 // Only DC motors driven through a 2-pin-per-motor driver (e.g. TB6612,
 // DRV8833: one PWM-capable pin per direction, no separate enable pin).
-// Format: X(name, MotorPinA, MotorPinB)
+// One line per motor: { "name", motorPinA, motorPinB }
 
 #if OneMotor
-  #define MOTOR_LIST \
-    X(main, 9, 10)
+  static const struct { const char* name; uint8_t pinA; uint8_t pinB; } MOTORS[] = {
+    { "main", 9, 10 },
+  };
 #endif
 
 #if TwoMotors
-  #define MOTOR_LIST \
-    X(right, 9, 10) \
-    X(left, 11, 12)
+  static const struct { const char* name; uint8_t pinA; uint8_t pinB; } MOTORS[] = {
+    { "right", 9, 10 },
+    { "left", 11, 12 },
+  };
 #endif
 
 #if tank
-  #define MOTOR_LIST \
-    X(front_right, 9, 10) \
-    X(front_left, 11, 12) \
-    X(back_right, 13, A0) \
-    X(back_left, A1, A2)
+  static const struct { const char* name; uint8_t pinA; uint8_t pinB; } MOTORS[] = {
+    { "front_right", 9, 10 },
+    { "front_left", 11, 12 },
+    { "back_right", 13, A0 },
+    { "back_left", A1, A2 },
+  };
 #endif
 
 // ---- Steering servo -------------------------------------------------------
@@ -147,55 +156,12 @@
   #define IMU_MODEL MPU6500
 #endif
 
-// ---- BLE ---------------------------------------------------------------
-#if Is_blueTooth
-  #define BLE_DEVICE_NAME "Folkrace" // this is the name you'll see when scanning for it
-#endif
+// Note: there's no BLE section here - BLE_DEVICE_NAME (the name you'll see
+// when scanning) is a starting value, so it lives in Defaults.h instead.
 
 
 /* ============================================================
- * 3. STARTING TUNING VALUES
- * ============================================================
- *  Everything below can ALSO be changed live over BLE (the "help"
- *  command lists them all) and saved with "save" - saved values then
- *  win over these on every future boot. Treat these as your robot's
- *  starting point / "factory reset" values, not the only place to
- *  tune from.
+ * Starting tuning values + calibration constants live in Defaults.h,
+ * automatically included below. You don't need to open that file.
  * ============================================================ */
-
-// ---- Steering PID ----
-#define DEFAULT_KP              1.0f
-#define DEFAULT_KI              0.0f
-#define DEFAULT_KD              0.0f
-#define DEFAULT_K_LEFT          1.0f  // weight on the left sensor when only it is configured
-#define DEFAULT_K_LEFT_SIDE     1.0f  // weight on the left sensor when following down the middle
-#define DEFAULT_K_RIGHT         1.0f  // weight on the right sensor when only it is configured
-#define DEFAULT_K_RIGHT_SIDE    1.0f  // weight on the right sensor when following down the middle
-#define DEFAULT_K_REVERSE       1.0f  // speed multiplier while backing away from a dead end
-
-// ---- Speed (roughly -255..255 PWM units) ----
-#define DEFAULT_SPEED_FORWARD   150
-#define DEFAULT_SPEED_REVERSE   120
-#define DEFAULT_SPEED_MIN       60
-#define DEFAULT_SPEED_MAX       255
-
-// ---- Distances (millimeters) ----
-#define DEFAULT_DIST_NEAR       150   // reserved for future use (e.g. a slow-down zone)
-#define DEFAULT_DIST_FAR        300   // target distance when following a single wall
-#define DEFAULT_DIST_REVERSE    80    // front distance that triggers a reverse+turn
-#define DEFAULT_DIST_CONSTRAIN  400   // clamp on the steering error fed into the PID
-
-// ---- Speed ramping (pwm units per control loop tick) ----
-#define DEFAULT_ACCEL_STEP      10    // max increase per tick, speeding up
-#define DEFAULT_BRAKE_STEP      30    // max decrease per tick, slowing down
-
-// ---- Timing ----
-#define DEFAULT_START_DELAY_MS  3000  // "start" command countdown before RUNNING begins
-#define MANEUVER_REVERSE_MS     300   // how long the reverse+turn maneuver backs up for
-#define MANEUVER_TURN_MS        500   // how long it then pivots for
-#define MANEUVER_180_MS         900   // how long the manual "180" debug command pivots for
-
-// ---- Slope / IMU-assisted steering (only used if Is_IMU is on) ----
-#define DEFAULT_SLOPE_THRESHOLD 15.0f // degrees of pitch considered "on a ramp"
-#define DEFAULT_K_PITCH_RUNNING 0.0f  // extra forward speed per degree of pitch, if slope_boost is on
-#define DEFAULT_K_ACCEL_NUDGE   0.0f  // steering correction per unit of lateral accel
+#include "Defaults.h"

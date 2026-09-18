@@ -2,18 +2,17 @@
 
 #if Is_Sharp
 
-#define X(name, pin, angle) SharpSensor sharp_##name = { #name, pin, angle, 0 };
-  SHARP_SENSOR_LIST
-#undef X
-
-#define X(name, pin, angle) &sharp_##name,
-  SharpSensor* allSharpSensors[] = { SHARP_SENSOR_LIST };
-#undef X
-const uint8_t SHARP_SENSOR_COUNT = sizeof(allSharpSensors) / sizeof(allSharpSensors[0]);
+// One SharpSensor object per entry in config.h's SHARP_SENSORS[] list.
+const uint8_t SHARP_SENSOR_COUNT = sizeof(SHARP_SENSORS) / sizeof(SHARP_SENSORS[0]);
+SharpSensor allSharpSensors[SHARP_SENSOR_COUNT];
 
 void sharp_setup() {
   for (uint8_t i = 0; i < SHARP_SENSOR_COUNT; i++) {
-    pinMode(allSharpSensors[i]->pin, INPUT);
+    allSharpSensors[i].name          = SHARP_SENSORS[i].name;
+    allSharpSensors[i].pin           = SHARP_SENSORS[i].pin;
+    allSharpSensors[i].angle         = SHARP_SENSORS[i].angle;
+    allSharpSensors[i].lastReadingMM = 0;
+    pinMode(allSharpSensors[i].pin, INPUT);
   }
 }
 
@@ -37,8 +36,8 @@ uint16_t sharp_read(const char* name) {
 
 SharpSensor* sharp_getByName(const char* name) {
   for (uint8_t i = 0; i < SHARP_SENSOR_COUNT; i++) {
-    if (strcmp(allSharpSensors[i]->name, name) == 0) {
-      return allSharpSensors[i];
+    if (strcmp(allSharpSensors[i].name, name) == 0) {
+      return &allSharpSensors[i];
     }
   }
   return nullptr;

@@ -2,8 +2,8 @@
 
 Only available if `Is_blueTooth` is on in `config.h`. Connect with any
 generic BLE serial/terminal app - the robot advertises as `BLE_DEVICE_NAME`
-(default `Folkrace`). Send commands as plain text; most reply with the
-current value(s) whether you're reading or setting them.
+(set in `Defaults.h`, default `Folkrace`). Send commands as plain text;
+most reply with the current value(s) whether you're reading or setting them.
 
 Every command is only allowed in certain states - sending one at the wrong
 time gets `not allowed in this mode` back instead of running it. That's
@@ -15,8 +15,10 @@ listed as **Allowed in** below.
 | --- | --- | --- |
 | `ready` | Idle | Arms the robot: `Idle` -> `Ready`. |
 | `start` | Ready | Begins the countdown: `Ready` -> `Countdown` -> (after `start_delay_ms`) `Running`. |
-| `stop` | Countdown, Running | Stops immediately, back to `Idle`. |
+| `stop` | Countdown, Running, Forward, Backwards | Stops immediately, back to `Idle`. |
 | `calibrate` | Idle | Runs the calibration routine once, then back to `Idle`. See [Calibration.md](Calibration.md). |
+| `forward` | Idle, Ready | Bench test: drives straight forward at `speed_forward` until you send `stop`. |
+| `backward` | Idle, Ready | Bench test: drives straight backward at `speed_reverse` until you send `stop`. |
 | `state` | any | Prints a summary: mode, PID gains, distances, speeds, IMU flags. |
 | `help` | any | Lists every command name. |
 
@@ -53,7 +55,7 @@ Example: `k p 2.5` sets Kp to 2.5 and echoes it back.
 
 | Name | Field | Meaning |
 | --- | --- | --- |
-| `near` | `dist_near` | Reserved - not currently used by the built-in algorithm. |
+| `near` | `dist_near` | Not read by anything in the shipped code - free for your own algorithm to use. |
 | `far` | `dist_far` | Target distance when following a single wall. |
 | `reverse` | `dist_reverse` | Front distance that triggers the reverse+turn maneuver. |
 | `constrain` | `dist_constrain` | Clamp on the steering error fed into the PID. |
@@ -74,7 +76,7 @@ Example: `k p 2.5` sets Kp to 2.5 and echoes it back.
 | `reverse_drive` | `drive_reversed` | Use if the motors are wired backwards instead of re-wiring them. |
 | `slope_boost` | `slope_boost` | Enables the uphill speed boost (needs `Is_IMU`). |
 | `imu` | `imu_enabled` | Enables IMU-assisted steering/speed (needs `Is_IMU`). |
-| `scaled_speed` | `scaled_speed` | Reserved - not currently used by the built-in algorithm. |
+| `scaled_speed` | `scaled_speed` | Not read by anything in the shipped code - free for your own algorithm to use. |
 
 ## Debug telemetry - `log`
 
@@ -91,7 +93,7 @@ sending `log dist` again turns it back off.
 
 | Command | Allowed in | Does |
 | --- | --- | --- |
-| `180` | Running | Triggers the same turning maneuver as the automatic dead-end turn, but longer (`MANEUVER_180_MS`) and without backing up first - handy for spinning the robot around manually on the bench. |
+| `180` | Running | Sets `state.debug.do_manual_180` - handy for triggering an in-place turn manually on the bench. Only actually turns the robot if your `onRunning()` checks this flag and calls `maneuver_start_180()`/`maneuver_service()`, the way the worked example in [Algorithm.md](Algorithm.md) does. |
 
 ## Saving
 

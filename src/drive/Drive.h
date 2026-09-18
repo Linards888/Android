@@ -11,12 +11,12 @@ struct Motor {
   uint8_t MotorPinB;
 };
 
-#define X(name, MotorPinA, MotorPinB) extern Motor motor_##name;
-  MOTOR_LIST
-#undef X
-
-extern Motor* allMotors[];
+extern Motor allMotors[];
 extern const uint8_t MOTOR_COUNT;
+
+// Finds a motor by the name you gave it in config.h's MOTORS[] list.
+// Returns nullptr if no motor with that name is configured.
+Motor* motor_getByName(const char* name);
 
 void motorsetup();
 

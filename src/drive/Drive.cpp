@@ -5,21 +5,46 @@
   #include "Steering.h"
 #endif
 
-#define X(name, MotorPinA, MotorPinB) Motor motor_##name = { #name, MotorPinA, MotorPinB};
-  MOTOR_LIST
-#undef X
+const uint8_t MOTOR_COUNT = sizeof(MOTORS) / sizeof(MOTORS[0]);
+Motor allMotors[MOTOR_COUNT];
 
-#define X(name, MotorPinA, MotorPinB) &motor_##name,
-  Motor* allMotors[] = { MOTOR_LIST };
-#undef X
+// Finds a motor by the name it was given in config.h's MOTORS[] list.
+Motor* motor_getByName(const char* name) {
+  for (uint8_t i = 0; i < MOTOR_COUNT; i++) {
+    if (strcmp(allMotors[i].name, name) == 0) return &allMotors[i];
+  }
+  return nullptr;
+}
 
-const uint8_t MOTOR_COUNT = sizeof(allMotors) / sizeof(allMotors[0]);
+// Checks that every motor name the selected drive layout needs (see
+// drive_apply() below) is actually present in config.h's MOTORS[] list, and
+// prints a clear message instead of silently doing nothing if one's missing.
+static void checkRequiredMotor(const char* name) {
+  if (motor_getByName(name) == nullptr) {
+    Serial.print("Drive: missing required motor \"");
+    Serial.print(name);
+    Serial.println("\" - check the MOTORS[] list in config.h");
+  }
+}
 
 void motorsetup() {
   for (uint8_t i = 0; i < MOTOR_COUNT; i++) {
-    pinMode(allMotors[i]->MotorPinA, OUTPUT);
-    pinMode(allMotors[i]->MotorPinB, OUTPUT);
+    allMotors[i] = { MOTORS[i].name, MOTORS[i].pinA, MOTORS[i].pinB };
+    pinMode(allMotors[i].MotorPinA, OUTPUT);
+    pinMode(allMotors[i].MotorPinB, OUTPUT);
   }
+
+#if OneMotor
+  checkRequiredMotor("main");
+#elif TwoMotors
+  checkRequiredMotor("left");
+  checkRequiredMotor("right");
+#elif tank
+  checkRequiredMotor("front_left");
+  checkRequiredMotor("front_right");
+  checkRequiredMotor("back_left");
+  checkRequiredMotor("back_right");
+#endif
 }
 
 // Requires an ESP32 Arduino core new enough to provide the classic
@@ -42,8 +67,8 @@ void MotorDrive(Motor* m, int speed) {
 
 void stopMotors() {
   for (uint8_t i = 0; i < MOTOR_COUNT; i++) {
-    analogWrite(allMotors[i]->MotorPinA, 0);
-    analogWrite(allMotors[i]->MotorPinB, 0);
+    analogWrite(allMotors[i].MotorPinA, 0);
+    analogWrite(allMotors[i].MotorPinB, 0);
   }
 }
 
@@ -51,12 +76,12 @@ void stopMotors() {
 
   motorsetup();
 
-// drive individual motors by name (names come from MOTOR_LIST in config.h)
-  MotorDrive(&motor_left, 200);
-  MotorDrive(&motor_right, 200);
+// drive individual motors by name (names come from MOTORS[] in config.h)
+  MotorDrive(motor_getByName("left"), 200);
+  MotorDrive(motor_getByName("right"), 200);
 
 // or generically, by index
-  for (uint8_t i = 0; i < MOTOR_COUNT; i++) MotorDrive(allMotors[i], 150);
+  for (uint8_t i = 0; i < MOTOR_COUNT; i++) MotorDrive(&allMotors[i], 150);
 */
 
 
@@ -101,20 +126,27 @@ void drive_apply(int forwardSpeed, float steer) {
 #endif
 
 #if OneMotor
+  static Motor* motor_main = motor_getByName("main");
   currentSpeed = rampSpeed(currentSpeed, forwardSpeed, state.accel, state.brake);
-  MotorDrive(&motor_main, currentSpeed);
+  MotorDrive(motor_main, currentSpeed);
 #elif TwoMotors
+  static Motor* motor_left  = motor_getByName("left");
+  static Motor* motor_right = motor_getByName("right");
   currentLeft  = rampSpeed(currentLeft,  leftTarget,  state.accel, state.brake);
   currentRight = rampSpeed(currentRight, rightTarget, state.accel, state.brake);
-  MotorDrive(&motor_left,  currentLeft);
-  MotorDrive(&motor_right, currentRight);
+  MotorDrive(motor_left,  currentLeft);
+  MotorDrive(motor_right, currentRight);
 #elif tank
+  static Motor* motor_front_left  = motor_getByName("front_left");
+  static Motor* motor_back_left   = motor_getByName("back_left");
+  static Motor* motor_front_right = motor_getByName("front_right");
+  static Motor* motor_back_right  = motor_getByName("back_right");
   currentLeft  = rampSpeed(currentLeft,  leftTarget,  state.accel, state.brake);
   currentRight = rampSpeed(currentRight, rightTarget, state.accel, state.brake);
-  MotorDrive(&motor_front_left,  currentLeft);
-  MotorDrive(&motor_back_left,   currentLeft);
-  MotorDrive(&motor_front_right, currentRight);
-  MotorDrive(&motor_back_right,  currentRight);
+  MotorDrive(motor_front_left,  currentLeft);
+  MotorDrive(motor_back_left,   currentLeft);
+  MotorDrive(motor_front_right, currentRight);
+  MotorDrive(motor_back_right,  currentRight);
 #endif
 }
 

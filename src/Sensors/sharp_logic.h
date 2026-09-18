@@ -10,11 +10,7 @@
     uint16_t lastReadingMM;
   };
 
-  #define X(name, pin, angle) extern SharpSensor sharp_##name;
-    SHARP_SENSOR_LIST
-  #undef X
-
-  extern SharpSensor* allSharpSensors[];
+  extern SharpSensor allSharpSensors[];
   extern const uint8_t SHARP_SENSOR_COUNT;
 
   void sharp_setup();

@@ -39,11 +39,11 @@
 #endif
 
 #if (Is_Sharp + Is_TOF + Is_Ultrasonic) == 0
-  #warning "No distance sensor is enabled in config.h - the built-in wall-following logic will have nothing to steer by."
+  #warning "No distance sensor is enabled in config.h - sensor_read() will have nothing to read."
 #endif
 
 #if OneMotor && !Is_servo
-  #warning "OneMotor without Is_servo has no way to steer - the wall-following logic will only ever drive straight."
+  #warning "OneMotor without Is_servo has no way to steer - drive_apply()'s steer argument will be ignored."
 #endif
 
 

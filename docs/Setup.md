@@ -9,11 +9,16 @@ git clone https://github.com/Linards888/Android
 cd Android
 ```
 
-Three things live in this folder:
+Four things live in this folder:
 
-- **`Android.ino`** - the main sketch. You rarely need to edit this.
 - **`config.h`** - your robot's description (pins, sensors, motors,
-  features, starting tuning values). You'll edit this every time.
+  features). You'll edit this every time.
+- **`Defaults.h`** - starting tuning values + calibration constants. You
+  almost never need to open this.
+- **`Android.ino`** - the main sketch: the state machine, and `onRunning()`
+  where you write your own driving algorithm (it ships blank - see
+  [Algorithm.md](Algorithm.md) for a worked example and
+  [Android_ino.md](Android_ino.md) for the full toolbox).
 - **`src/`** - drivers and plumbing. You shouldn't need to open this.
 
 ## Step 2 - Install the Arduino IDE and the ESP32 board package
@@ -49,9 +54,11 @@ Open `config.h`. It's laid out in the order you should fill it in:
    for whatever you turned on in step 1. Name sensors `front`, `left` and
    `right` where they apply - the driving algorithm looks them up by
    exactly these names (see [Algorithm.md](Algorithm.md)).
-3. **Starting tuning values** - the defaults are a reasonable starting
-   point. Leave them as-is for your first upload; you'll tune them live
-   over BLE once the robot is on the bench (step 6).
+
+That's all of `config.h`. Starting tuning values (PID gains, speeds,
+distances) live in `Defaults.h` and already have reasonable values filled
+in - leave that file alone for your first upload; you'll tune them live
+over BLE once the robot is on the bench (step 6).
 
 Leaving everything at `0` (the state you clone the repo in) is intentional:
 the build refuses to compile with a clear error message telling you exactly
@@ -65,7 +72,8 @@ or conflicting - fix it there, not in the code.
 2. Under **Tools**, set:
    - **USB CDC On Boot:** `Enabled`
    - **Erase All Flash Before Sketch Upload:** `Disabled` (enabling this
-     would also wipe any saved BLE tuning values - see `Memory` in `config.h`)
+     would also wipe any saved BLE tuning values - `Memory` is turned on in
+     `config.h`, starting values are in `Defaults.h`)
    - **Upload Speed:** as high as your board supports (`115200` is a safe default)
 3. Click **Upload**.
 
@@ -78,9 +86,15 @@ from `config.h` (see step 4) rather than a bug in the firmware itself.
 2. Open the Serial Monitor at **115200 baud**. `Folkrace ready.` means every
    enabled sensor initialized and `config.h` passed all its checks.
 3. If `Is_blueTooth` is on, connect with any generic BLE serial/terminal app
-   (the robot advertises as `BLE_DEVICE_NAME` from `config.h`, default
+   (the robot advertises as `BLE_DEVICE_NAME` from `Defaults.h`, default
    `Folkrace`). Send `help` for the full command list.
-4. Typical bring-up sequence over BLE:
+4. Before writing any driving algorithm, check the motors/wiring are right
+   with the bench-test commands: `forward` drives straight forward,
+   `backward` drives straight backward (both at the `speed` values), `stop`
+   stops. See [BLE_Commands.md](BLE_Commands.md).
+5. Once you've written your own `onRunning()` (see
+   [Android_ino.md](Android_ino.md) and [Algorithm.md](Algorithm.md) for a
+   worked example), a typical bring-up sequence over BLE looks like:
 
    ```
    ready
@@ -93,17 +107,17 @@ from `config.h` (see step 4) rather than a bug in the firmware itself.
    ```
 
    See [BLE_Commands.md](BLE_Commands.md) for the complete list.
-5. Only once you're happy with how it behaves on the bench, put the wheels
+6. Only once you're happy with how it behaves on the bench, put the wheels
    down and try it on the actual track.
 
 ## Troubleshooting
 
 | Symptom | Likely cause |
 | --- | --- |
-| Won't compile, `#error "No board selected!"` / `"No motor configuration selected!"` / similar | `config.h` step 1 isn't finished - see step 4 above. |
+| Won't compile, `#error "No board selected!"` / `"No motor configuration selected!"` / similar | `config.h`'s Hardware section isn't finished - see step 4 above. |
 | Won't compile, some other library-related error | You enabled a feature in `config.h` without installing its library (step 3), or the library version is too old/new. |
 | Compiles, but `TOF init failed: <name>` on Serial | Check that sensor's XSHUT pin and wiring. |
-| Robot spins in place / drives backwards | Check `MOTOR_LIST` pin order in `config.h`, or toggle the BLE `reverse_drive` command. |
+| Robot spins in place / drives backwards | Check the `MOTORS[]` pin order in `config.h`, or toggle the BLE `reverse_drive` command. |
 | Steering over/under-corrects, oscillates | Tune `k p`/`k i`/`k d` live over BLE - see [Algorithm.md](Algorithm.md) for what each does. |
 | Sharp sensor readings look wrong/inverted | Needs its two-point calibration - see [Calibration.md](Calibration.md). |
 | BLE console not responding | Make sure `Is_blueTooth` is `1` and you reconnected after the last upload (the device name/UUIDs don't change, but old connections can go stale). |

@@ -2,20 +2,21 @@
 
 #if Is_Ultrasonic
 
-#define X(name, trigPin, echoPin, angle) UltrasonicSensor usonic_##name = { #name, trigPin, echoPin, angle, 0 };
-  USONIC_SENSOR_LIST
-#undef X
-
-#define X(name, trigPin, echoPin, angle) &usonic_##name,
-  UltrasonicSensor* allUsonicSensors[] = { USONIC_SENSOR_LIST };
-#undef X
-const uint8_t USONIC_SENSOR_COUNT = sizeof(allUsonicSensors) / sizeof(allUsonicSensors[0]);
+// One UltrasonicSensor object per entry in config.h's USONIC_SENSORS[] list.
+const uint8_t USONIC_SENSOR_COUNT = sizeof(USONIC_SENSORS) / sizeof(USONIC_SENSORS[0]);
+UltrasonicSensor allUsonicSensors[USONIC_SENSOR_COUNT];
 
 void ultrasonic_setup() {
   for (uint8_t i = 0; i < USONIC_SENSOR_COUNT; i++) {
-    pinMode(allUsonicSensors[i]->trigPin, OUTPUT);
-    digitalWrite(allUsonicSensors[i]->trigPin, LOW);
-    pinMode(allUsonicSensors[i]->echoPin, INPUT);
+    allUsonicSensors[i].name          = USONIC_SENSORS[i].name;
+    allUsonicSensors[i].trigPin       = USONIC_SENSORS[i].trigPin;
+    allUsonicSensors[i].echoPin       = USONIC_SENSORS[i].echoPin;
+    allUsonicSensors[i].angle         = USONIC_SENSORS[i].angle;
+    allUsonicSensors[i].lastReadingMM = 0;
+
+    pinMode(allUsonicSensors[i].trigPin, OUTPUT);
+    digitalWrite(allUsonicSensors[i].trigPin, LOW);
+    pinMode(allUsonicSensors[i].echoPin, INPUT);
   }
 }
 
@@ -49,8 +50,8 @@ uint16_t ultrasonic_read(const char* name) {
 
 UltrasonicSensor* ultrasonic_getByName(const char* name) {
   for (uint8_t i = 0; i < USONIC_SENSOR_COUNT; i++) {
-    if (strcmp(allUsonicSensors[i]->name, name) == 0) {
-      return allUsonicSensors[i];
+    if (strcmp(allUsonicSensors[i].name, name) == 0) {
+      return &allUsonicSensors[i];
     }
   }
   return nullptr;
