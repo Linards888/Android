@@ -1,17 +1,16 @@
 #include "RobotBLE.h"
 
-#include "RobotState.h"
-
-extern float kp, ki, kd;
-extern int maxspeed, minspeed, fspeed, rspeed;
-extern void save_state();
+#if Is_blueTooth
+#include <stdarg.h>
+#include "commands.h"
 
 BLEServer *server = nullptr;
 BLECharacteristic *characteristic = nullptr;
 
 void initBLE() {
-  BLEDevice::init("Folkrace");
+  BLEDevice::init(BLE_DEVICE_NAME);
   server = BLEDevice::createServer();
+  server->setCallbacks(new MyServerCallbacks());
 
   BLEService *service = server->createService(SERVICE_UUID);
 
@@ -21,14 +20,14 @@ void initBLE() {
                      BLECharacteristic::PROPERTY_WRITE  |
                      BLECharacteristic::PROPERTY_NOTIFY
                    );
-                   
+
   characteristic->setCallbacks(new MyCallbacks());
   service->start();
 
   BLEAdvertising *advertising = BLEDevice::getAdvertising();
   advertising->addServiceUUID(SERVICE_UUID);
   advertising->setScanResponse(true);
-  advertising->setMinPreferred(0x06);  // Corrected property name typo
+  advertising->setMinPreferred(0x06);
   BLEDevice::startAdvertising();
 
   Serial.println("BLE started successfully");
@@ -44,22 +43,39 @@ void notify(const char* fmt, ...) {
   vsnprintf(buffer, sizeof(buffer), fmt, args);
   va_end(args);
 
-  characteristic->setValue(buffer);
+  characteristic->setValue((uint8_t*)buffer, strlen(buffer));
   characteristic->notify();
+}
+
+void MyServerCallbacks::onConnect(BLEServer* pServer) {
+  Serial.println("BLE client connected");
+}
+
+void MyServerCallbacks::onDisconnect(BLEServer* pServer) {
+  Serial.println("BLE client disconnected, restarting advertising");
+  // The ESP32 BLE stack stops advertising on disconnect unless told
+  // otherwise, which would otherwise make the robot unreachable again.
+  BLEDevice::startAdvertising();
 }
 
 void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
   String value = pCharacteristic->getValue();
+  if (value.length() == 0) return;
 
-  if (value.length() > 0) {
-    Serial.print("Received BLE Data: ");
-    Serial.println(value.c_str());
-    
-    if (value == "START") {
-      currentState = CALIBRATION;
-    }
-    
-    // Parse incoming tuning payloads here if necessary
-    // Example parsed result: kp = newValue; save_state();
-  }
+  Serial.print("BLE RX: ");
+  Serial.println(value);
+
+  static char buffer[128];
+  size_t len = value.length();
+  if (len > sizeof(buffer) - 1) len = sizeof(buffer) - 1;
+  memcpy(buffer, value.c_str(), len);
+  buffer[len] = '\0';
+
+  char* rest = buffer;
+  char* command = strtok_r(rest, " \r\n", &rest);
+  if (command == nullptr) return;
+
+  handle_command(command, rest);
 }
+
+#endif

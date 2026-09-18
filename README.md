@@ -155,14 +155,14 @@ Instructions
 ## Roadmap
 
 - [x] configuration.h and logic
-- [x] tof logic
-- [x] BLE logic BUT I WILL REDO
+- [x] tof logic (+ Sharp IR and ultrasonic, generic sensor-by-name lookup)
+- [x] BLE logic - full tuning console (k/speed/dist/log/start/stop/state/save/...)
 - [ ] Working demo(hopefully), so its more visual, not just code.
-- [ ] Memory logic
+- [x] Memory logic - parameters persist across reboots via ESP32 Preferences
 - [x] Drive system
 - [x] Folkrace states
-- [ ] PID logic & Matematics/Calculations
-- [ ] Calibrations
+- [x] PID logic & Matematics/Calculations - wall-following steering PID + front-wall reverse/turn
+- [x] Calibrations - IMU bias calibration, Sharp two-point calibration (see docs/Calibration.md)
 - [ ] Space Avereness
 - [ ] Prob something else
 - [ ] Ground station

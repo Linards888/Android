@@ -1,6 +1,8 @@
 #pragma once
-
 #include <Arduino.h>
+#include "config.h"
+
+#if Is_blueTooth
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -12,6 +14,10 @@ extern BLEServer *server;
 extern BLECharacteristic *characteristic;
 
 void initBLE();
+
+// printf-style helper that sends a formatted string as a BLE notification.
+// Truncated to 127 characters. Safe to call even if nothing is connected
+// (it just does nothing).
 void notify(const char* fmt, ...);
 
 class MyServerCallbacks : public BLEServerCallbacks {
@@ -22,3 +28,4 @@ class MyServerCallbacks : public BLEServerCallbacks {
 class MyCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) override;
 };
+#endif

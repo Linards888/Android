@@ -17,38 +17,39 @@ void motorsetup() {
   }
 }
 
+// Requires an ESP32 Arduino core new enough to provide the classic
+// analogWrite() API (arduino-esp32 core 3.x and newer manage the LEDC PWM
+// hardware for you). If your board package is older, update it via Boards
+// Manager rather than trying to patch this function.
 void MotorDrive(Motor* m, int speed) {
   if (m == nullptr) return;
 
   speed = constrain(speed, -255, 255);
 
   if (speed >= 0) {
-    digitalWrite(m->MotorPinA, HIGH);
-    digitalWrite(m->MotorPinB, LOW);
+    analogWrite(m->MotorPinA, speed);
+    analogWrite(m->MotorPinB, 0);
   } else {
-    digitalWrite(m->MotorPinA, LOW);
-    digitalWrite(m->MotorPinB, HIGH);
-    speed = -speed;
+    analogWrite(m->MotorPinA, 0);
+    analogWrite(m->MotorPinB, -speed);
   }
 }
 
 void stopMotors() {
   for (uint8_t i = 0; i < MOTOR_COUNT; i++) {
-    digitalWrite(allMotors[i]->MotorPinA, LOW);
-    digitalWrite(allMotors[i]->MotorPinB, LOW);
+    analogWrite(allMotors[i]->MotorPinA, 0);
+    analogWrite(allMotors[i]->MotorPinB, 0);
   }
 }
 
 /* ---- Usage ----
 
-  motor_setup();
+  motorsetup();
 
-// drive individual motors by name
-  MotorDrive(&motor_frontLeft, 200);
-  MotorDrive(&motor_frontRight, 200);
-  MotorDrive(&motor_backLeft, -200);   // reverse
-  MotorDrive(&motor_backRight, -200);
+// drive individual motors by name (names come from MOTOR_LIST in config.h)
+  MotorDrive(&motor_left, 200);
+  MotorDrive(&motor_right, 200);
 
-// for loop generically
-  MotorDrive(allMotors[i], 150);
+// or generically, by index
+  for (uint8_t i = 0; i < MOTOR_COUNT; i++) MotorDrive(allMotors[i], 150);
 */

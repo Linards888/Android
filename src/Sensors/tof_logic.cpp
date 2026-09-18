@@ -1,8 +1,8 @@
 #include "tof_logic.h"
 
-//Es nesaprotu tik daudz, vai arī ja saprotu tad aizmirsu un tagat vairs neatceros, lūdzu palīdzat man
+#if Is_TOF
 
-// Generates: TofSensor tof_front = {VL53L0X(), "front", 4, 0x30, 0, 0};  etc.
+// Generates: TofSensor tof_front = { VL53L0X(), "front", 4, 0x30, 0, 0 };  etc.
   #define X(name, pin, addr, angle) TofSensor tof_##name = { VL53L0X(), #name, pin, addr, angle, 0 };
     TOF_SENSOR_LIST
   #undef X
@@ -16,24 +16,35 @@
   void tof_setup() {
     Wire.begin();
 
-    // Step 1: hold every sensor's XSHUT low (disabled)
+    // Step 1: hold every sensor's XSHUT low (disabled), so only one at a
+    // time responds at the factory-default I2C address while we bring it up.
     for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
       pinMode(allTofSensors[i]->xshutPin, OUTPUT);
       digitalWrite(allTofSensors[i]->xshutPin, LOW);
     }
+    delay(10);
 
-    // Step 2: wake sensors one at a time, assign each a unique address
+    // Step 2: wake sensors one at a time. Each one is init()'d while still at
+    // its default address (0x29), THEN moved to its configured address -
+    // doing it in the other order fails because the previous sensor may
+    // already be sitting on the address we're about to hand out.
     for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
       digitalWrite(allTofSensors[i]->xshutPin, HIGH);
       delay(10);
+
+      allTofSensors[i]->sensor.setTimeout(500);
+      if (!allTofSensors[i]->sensor.init()) {
+        Serial.print("TOF init failed: ");
+        Serial.println(allTofSensors[i]->name);
+        continue;
+      }
       allTofSensors[i]->sensor.setAddress(allTofSensors[i]->address);
-      allTofSensors[i]->sensor.init();
     }
   }
 
   void tof_readAll() {
     for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      allTofSensors[i]->lastReadingMM = allTofSensors[i]->sensor.readRangeSingleMillimeters();
+      tof_read(allTofSensors[i]);
       Serial.print(allTofSensors[i]->name);
       Serial.print(" ("); Serial.print(allTofSensors[i]->angle); Serial.print("deg): ");
       Serial.println(allTofSensors[i]->lastReadingMM);
@@ -49,6 +60,7 @@
     if (s->sensor.timeoutOccurred()) {
       Serial.print("TOF timeout: ");
       Serial.println(s->name);
+      return 0xFFFF; // don't let a glitched reading look like "very close"
     }
 
     return s->lastReadingMM;

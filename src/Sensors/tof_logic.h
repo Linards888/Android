@@ -3,15 +3,20 @@
 #include "config.h"
 
 #if Is_TOF
-  struct tofSensor {
+  #include <Wire.h>
+  #include <VL53L0X.h>
+
+  struct TofSensor {
     VL53L0X sensor;
     const char* name;
     uint8_t xshutPin;
     uint8_t address;
     int16_t angle;
+    uint16_t lastReadingMM;
   };
 
-  #define X(name, pin, addr, angle) extern tofSensor tof_##name;
+  // Generates: extern TofSensor tof_front; etc, one per line in TOF_SENSOR_LIST (config.h)
+  #define X(name, pin, addr, angle) extern TofSensor tof_##name;
     TOF_SENSOR_LIST
   #undef X
 

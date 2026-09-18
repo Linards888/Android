@@ -2,14 +2,16 @@
 #include "config.h"
 
 
-// ---- Error Messages ----
+// ---- Configuration sanity checks ----
+// These turn a wrong/missing config.h selection into a compile-time error
+// instead of confusing runtime behaviour.
 
 #if Is_Arduino == 1
-  #error "turn off arduino. i wont make it to work with it"
+  #error "turn off Is_Arduino - this firmware needs ESP32 features (BLE, Preferences, PWM) and won't work on plain Arduino boards."
 #endif
 
 #if (Is_Arduino + Is_Esp32) == 0
-  #error "No board selected! Set Is_Arduino to 0 and Is_Esp32 to 1."
+  #error "No board selected! Set Is_Esp32 to 1 in config.h."
 #endif
 
 #if (Is_Arduino + Is_Esp32) > 1
@@ -17,33 +19,45 @@
 #endif
 
 #if (OneMotor + TwoMotors + tank) == 0
-  #error "No motor configuration selected! Choose one of OneMotor / TwoMotors / tank."
+  #error "No motor configuration selected! Choose one of OneMotor / TwoMotors / tank in config.h."
 #endif
 
 #if (OneMotor + TwoMotors + tank) > 1
-  #error "Multiple motor configurations selected! Choose only one of OneMotor / TwoMotors / tank."
+  #error "Multiple motor configurations selected! Choose only one of OneMotor / TwoMotors / tank in config.h."
 #endif
 
-#if SpaceControl = 1
-  if (SpaceControl + Is_IMU < 1)  {
-    #error "Enable Also IMU sensor, if there is no IMU, turn off SpaceControl cant work"
-  }
+#if Is_vl53l8cx
+  #error "Is_vl53l8cx is not implemented yet - leave it at 0 in config.h."
 #endif
 
-// ---- libraries inclusion ----
+#if Telemetry
+  #error "Telemetry is not implemented yet - leave it at 0 in config.h."
+#endif
+
+#if spaceControl
+  #error "spaceControl is not implemented yet - leave it at 0 in config.h."
+#endif
+
+#if (Is_Sharp + Is_TOF + Is_Ultrasonic) == 0
+  #warning "No distance sensor is enabled in config.h - the built-in wall-following logic will have nothing to steer by."
+#endif
+
+#if OneMotor && !Is_servo
+  #warning "OneMotor without Is_servo has no way to steer - the wall-following logic will only ever drive straight."
+#endif
+
+
+// ---- Library / module includes ----
+// Only pull in what the enabled features actually need.
 
 #include "Drive.h"
+#include "RobotState.h"
+#include "PIDAlgorithm.h"
+#include "DeltaTime.h"
+#include "Sensors.h"
 
 #if Is_IMU
-  #include <FastIMU.h>
-  #include <Wire.h>
   #include "IMU_logic.h"
-#endif
-
-#if Is_TOF
-  #include <VL53L0X.h>
-  #include <Wire.h>
-  #include "tof_logic.h"
 #endif
 
 #if Is_blueTooth
@@ -52,16 +66,12 @@
   #include <BLEUtils.h>
   #include <BLEServer.h>
 
-  #include "notify.h"
   #include "RobotBLE.h"
-#endif
-
-#if Is_Ultrasonic
-  #include "Ultrasonic_logic.h"
+  #include "commands.h"
 #endif
 
 #if Is_servo
-  #include <kkads_servo.h>
+  #include "Steering.h"
 #endif
 
 #if Memory
@@ -69,6 +79,4 @@
   #include "Memory.h"
 #endif
 
-#if spaceControl
-  #include "Space.h"
-#endif
+#include "Calibration.h"
