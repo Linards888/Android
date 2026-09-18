@@ -68,6 +68,7 @@
 
   #include "RobotBLE.h"
   #include "commands.h"
+  #include "Telemetry.h"
 #endif
 
 #if Is_servo

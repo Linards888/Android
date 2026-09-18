@@ -1,14 +1,27 @@
 /* ============================================================
  *  Android.ino - Folkrace main sketch
  * ============================================================
- *  This file holds the robot's actual behaviour: the state
- *  machine, the wall-following drive algorithm, and wiring the
- *  optional features (BLE console, IMU, memory) together.
+ *  Hardware selection, pins, addresses and starting tuning values
+ *  live in config.h - that's the other file you edit. Everything
+ *  under src/ is drivers/plumbing (motor PWM, sensor reading, BLE
+ *  wiring, flash storage) that this file calls into but you
+ *  normally don't need to open.
  *
- *  Hardware selection and pin/address/tuning numbers live in
- *  config.h - that's the other file you should need to edit.
- *  Everything under src/ is drivers/plumbing that config.h and
- *  this file call into.
+ *  THIS file is the robot's actual behaviour. It's organized as
+ *  one function per state:
+ *
+ *      onIdle        - motors off, just sitting there
+ *      onReady       - armed, waiting for the BLE "start" command
+ *      onCountdown   - short delay after "start", before it goes
+ *      onCalibration - runs once, then drops back to Idle
+ *      onRunning     - actually drives the track (see below)
+ *
+ *  loop() just asks "which state are we in?" and calls the matching
+ *  function. To change what a state does, edit its function - you
+ *  don't need to touch anything else.
+ *
+ *  onRunning() is the one you'll come back to most: it's the whole
+ *  track-following algorithm, in one place, read top to bottom.
  * ============================================================
  */
 
@@ -19,155 +32,36 @@ static DeltaTime dt;
 static PIDController steeringPID;
 
 
-// ---- Drive helpers ----
-
-// Moves `current` toward `target` by at most `accelStep` (speeding up) or
-// `brakeStep` (slowing down) per call, so speed changes ramp instead of
-// jumping instantly - gentler on gearboxes and grip.
-static int rampSpeed(int current, int target, int accelStep, int brakeStep) {
-  if (target > current) return min(target, current + accelStep);
-  if (target < current) return max(target, current - brakeStep);
-  return current;
-}
-
-#if OneMotor
-static int currentSpeed = 0;
-#else
-static int currentLeft = 0;
-static int currentRight = 0;
-#endif
-
-static void resetDriveRamp() {
-#if OneMotor
-  currentSpeed = 0;
-#else
-  currentLeft = 0;
-  currentRight = 0;
-#endif
-}
-
-// Turns a desired forward speed + steering correction into actual motor (and
-// servo, if fitted) commands, ramping speed changes via state.accel/brake.
-static void drive_apply(int forwardSpeed, float steer) {
-  if (state.drive_reversed) {
-    forwardSpeed = -forwardSpeed;
-    steer = -steer;
-  }
-
-#if Is_servo
-  steering_set(steer);
-  int leftTarget = forwardSpeed;
-  int rightTarget = forwardSpeed;
-#else
-  int leftTarget  = forwardSpeed - (int)steer;
-  int rightTarget = forwardSpeed + (int)steer;
-#endif
-
-#if OneMotor
-  currentSpeed = rampSpeed(currentSpeed, forwardSpeed, state.accel, state.brake);
-  MotorDrive(&motor_main, currentSpeed);
-#elif TwoMotors
-  currentLeft  = rampSpeed(currentLeft,  leftTarget,  state.accel, state.brake);
-  currentRight = rampSpeed(currentRight, rightTarget, state.accel, state.brake);
-  MotorDrive(&motor_left,  currentLeft);
-  MotorDrive(&motor_right, currentRight);
-#elif tank
-  currentLeft  = rampSpeed(currentLeft,  leftTarget,  state.accel, state.brake);
-  currentRight = rampSpeed(currentRight, rightTarget, state.accel, state.brake);
-  MotorDrive(&motor_front_left,  currentLeft);
-  MotorDrive(&motor_back_left,   currentLeft);
-  MotorDrive(&motor_front_right, currentRight);
-  MotorDrive(&motor_back_right,  currentRight);
-#endif
-}
-
-
-// ---- Front-wall reverse+turn / manual "180" maneuver ----
-// Implemented as a short, timed, non-blocking sequence serviced once per
-// loop() iteration, instead of a blocking delay() that would freeze BLE and
-// sensor reads for the duration of the turn.
-
-static unsigned long maneuverTurnMs = MANEUVER_TURN_MS;
-
-static void start_reverse_turn(int16_t leftDist, int16_t rightDist) {
-  // Turn toward whichever side currently has more room. If we don't have
-  // both side readings, keep whatever direction was used last time.
-  if (leftDist >= 0 && rightDist >= 0) {
-    state.turn_direction = (leftDist > rightDist) ? -1 : 1;
-  }
-  state.maneuver = Maneuver::REVERSING;
-  state.maneuver_start_ms = millis();
-}
-
-static void start_manual_180() {
-  maneuverTurnMs = MANEUVER_180_MS;
-  state.maneuver = Maneuver::TURNING;
-  state.maneuver_start_ms = millis();
-}
-
-static void service_maneuver() {
-  unsigned long elapsed = millis() - state.maneuver_start_ms;
-
-  switch (state.maneuver) {
-    case Maneuver::REVERSING:
-      drive_apply(-(int)(state.speed_reverse * state.k_reverse), 0);
-      if (elapsed >= MANEUVER_REVERSE_MS) {
-        maneuverTurnMs = MANEUVER_TURN_MS;
-        state.maneuver = Maneuver::TURNING;
-        state.maneuver_start_ms = millis();
-      }
-      break;
-
-    case Maneuver::TURNING: {
-      int turnSpeed = state.speed_forward * state.turn_direction;
-      drive_apply(0, (float)turnSpeed);
-      if (elapsed >= maneuverTurnMs) {
-        state.maneuver = Maneuver::NONE;
-        resetDriveRamp();
-      }
-      break;
-    }
-
-    default:
-      break;
-  }
-}
-
-
-// ---- The actual wall-following algorithm ----
+// ============================================================
+//  onRunning() and its helpers - THE DRIVING ALGORITHM
+// ============================================================
 //
-//  - If the front sensor sees a wall closer than dist_reverse, back up and
-//    pivot toward whichever side has more room.
-//  - Otherwise, if both a left and right sensor are configured, steer to
-//    equalize their distances (drive down the middle of the track).
-//  - If only one side sensor is configured, steer to hold dist_far away
-//    from that single wall.
-//  - Optionally (IMU enabled), boost forward speed on an uphill slope and
-//    nudge steering from lateral acceleration.
-static void drive_step(float dtSeconds) {
-  if (state.maneuver != Maneuver::NONE) {
-    service_maneuver();
-    return;
-  }
+//  Every control loop tick while Mode::RUNNING, in order:
+//    1. If a turn maneuver is already in progress (see below), keep
+//       driving it and skip everything else this tick.
+//    2. Read whichever of the "front" / "left" / "right" sensors
+//       config.h defines.
+//    3. Front sensor sees a dead end -> start a reverse+turn maneuver.
+//    4. Otherwise, work out a steering error from the side sensor(s)
+//       and run it through the steering PID.
+//    5. Work out a forward speed (optionally boosted on a slope).
+//    6. Send speed + steering to the motors/servo.
+//
+//  Want a different algorithm entirely (line-following instead of
+//  wall-following, say)? This is the function to replace - the rest
+//  of the file (states, setup/loop) doesn't need to change.
 
-  if (state.debug.do_manual_180) {
-    state.debug.do_manual_180 = false;
-    start_manual_180();
-    service_maneuver();
-    return;
-  }
-
-  int16_t frontDist = sensor_read("front");
-  int16_t leftDist  = sensor_read("left");
-  int16_t rightDist = sensor_read("right");
-
-  if (frontDist >= 0 && frontDist <= state.dist_reverse) {
-    start_reverse_turn(leftDist, rightDist);
-    service_maneuver();
-    return;
-  }
-
+// How far off-center are we? Positive = closer to the right wall than
+// the left one, i.e. steer left; the sign convention matches what
+// drive_apply()'s `steer` argument expects (positive = turn right).
+//
+//  - Two side sensors configured: aim to keep them equal, so the robot
+//    drives down the middle of the track.
+//  - Only one side sensor: hold state.dist_far away from that one wall.
+//  - Neither: drive straight (error stays 0).
+static int computeSteeringError(int16_t leftDist, int16_t rightDist) {
   int error = 0;
+
   if (leftDist >= 0 && rightDist >= 0) {
     error = (int)(rightDist * state.pid.k_right_side - leftDist * state.pid.k_left_side);
   } else if (leftDist >= 0) {
@@ -175,63 +69,110 @@ static void drive_step(float dtSeconds) {
   } else if (rightDist >= 0) {
     error = (int)((rightDist - state.dist_far) * state.pid.k_right);
   }
-  error = constrain(error, -state.dist_constrain, state.dist_constrain);
 
-  float steer = steeringPID.update((float)error, dtSeconds);
+  // Clamp so one glitchy/out-of-range reading can't throw a huge,
+  // sudden correction at the steering PID.
+  return constrain(error, -state.dist_constrain, state.dist_constrain);
+}
 
-  int forwardSpeed = state.speed_forward;
+// Forward speed for this tick: state.speed_forward, optionally boosted
+// while climbing a slope (if Is_IMU + slope_boost are both on), then
+// clamped to state.speed_min..state.speed_max.
+static int computeForwardSpeed() {
+  int speed = state.speed_forward;
 
 #if Is_IMU
+  if (state.imu_enabled && state.slope_boost && imu_pitch() > state.slope_threshold) {
+    speed += (int)(state.k_pitch_running * imu_pitch());
+  }
+#endif
+
+  return constrain(speed, state.speed_min, state.speed_max);
+}
+
+static void onRunning(float dtSeconds) {
+  // 1. A reverse/turn maneuver (or the manual "180" debug command)
+  //    takes full control of the motors until it finishes.
+  if (maneuver_active()) {
+    maneuver_service();
+    return;
+  }
+  if (state.debug.do_manual_180) {
+    state.debug.do_manual_180 = false;
+    maneuver_start_180();
+    maneuver_service();
+    return;
+  }
+
+  // 2. Read sensors. sensor_read() returns -1 for any name config.h
+  //    didn't define, regardless of which sensor technology is used.
+  int16_t frontDist = sensor_read("front");
+  int16_t leftDist  = sensor_read("left");
+  int16_t rightDist = sensor_read("right");
+
+  // 3. Dead end ahead: hand off to the reverse+turn maneuver.
+  if (frontDist >= 0 && frontDist <= state.dist_reverse) {
+    maneuver_start_reverse_turn(leftDist, rightDist);
+    maneuver_service();
+    return;
+  }
+
+  // 4. Steer to stay centered / hold off a single wall.
+  int error = computeSteeringError(leftDist, rightDist);
+  float steer = steeringPID.update((float)error, dtSeconds);
+
+#if Is_IMU
+  // Small steering nudge from lateral acceleration (e.g. drifting sideways
+  // on a slippery patch). Zero by default (k_accel_nudge starts at 0).
   if (state.imu_enabled) {
-    if (state.slope_boost && imu_pitch() > state.slope_threshold) {
-      forwardSpeed += (int)(state.k_pitch_running * imu_pitch());
-    }
     steer += imu_accel_x() * state.k_accel_nudge;
   }
 #endif
 
-  forwardSpeed = constrain(forwardSpeed, state.speed_min, state.speed_max);
-
-  drive_apply(forwardSpeed, steer);
+  // 5 + 6. Forward speed, then actually drive.
+  drive_apply(computeForwardSpeed(), steer);
 }
 
 
-// ---- Periodic BLE telemetry (the "log" command) ----
+// ============================================================
+//  Every other state - short and simple by design
+// ============================================================
 
+// Motors off, nothing moving. Only housekeeping BLE commands work here.
+static void onIdle() {
+  drive_reset();
+}
+
+// Armed via the BLE "ready" command, waiting for "start".
+static void onReady() {
+  drive_reset();
+}
+
+// Brief pause after "start", so you have time to let go of the robot
+// before it moves. Length is state.start_delay_ms (config.h
+// DEFAULT_START_DELAY_MS, or the BLE "delay" command).
+static void onCountdown() {
+  drive_reset(); // stay stopped while we wait
+
+  if (millis() - state.countdown_start_ms >= state.start_delay_ms) {
+    state.mode = Mode::RUNNING;
+    steeringPID.reset();
 #if Is_blueTooth
-static unsigned long lastLogDistance = 0, lastLogGyro = 0, lastLogAccel = 0, lastLogYaw = 0, lastLogPitch = 0;
-
-static void service_debug_logs() {
-  unsigned long now = millis();
-
-  if (state.debug.log_distance && now - lastLogDistance >= state.debug.log_distance_interval_ms) {
-    lastLogDistance = now;
-    notify("dist f:%d l:%d r:%d\n", sensor_read("front"), sensor_read("left"), sensor_read("right"));
-  }
-
-#if Is_IMU
-  if (state.debug.log_gyro && now - lastLogGyro >= state.debug.log_gyro_interval_ms) {
-    lastLogGyro = now;
-    notify("gyro x:%.2f y:%.2f z:%.2f\n", imu_gyro_x(), imu_gyro_y(), imu_gyro_z());
-  }
-  if (state.debug.log_accel && now - lastLogAccel >= state.debug.log_accel_interval_ms) {
-    lastLogAccel = now;
-    notify("accel x:%.2f y:%.2f z:%.2f\n", imu_accel_x(), imu_accel_y(), imu_accel_z());
-  }
-  if (state.debug.log_yaw && now - lastLogYaw >= state.debug.log_yaw_interval_ms) {
-    lastLogYaw = now;
-    notify("yaw %.2f\n", imu_yaw());
-  }
-  if (state.debug.log_pitch && now - lastLogPitch >= state.debug.log_pitch_interval_ms) {
-    lastLogPitch = now;
-    notify("pitch %.2f\n", imu_pitch());
-  }
+    notify("running\n");
 #endif
+  }
 }
-#endif
+
+// Runs once (see src/Calibrations/Calibration.cpp), then drops back to Idle.
+static void onCalibration() {
+  run_calibration();
+  state.mode = Mode::IDLE;
+}
 
 
-// ---- Arduino entry points ----
+// ============================================================
+//  Arduino entry points
+// ============================================================
 
 void setup() {
   Serial.begin(115200);
@@ -266,39 +207,15 @@ void loop() {
   if (state.imu_enabled) imu_update(dtSeconds);
 #endif
 
+  // ---- What does each state do? See the matching function above. ----
   switch (state.mode) {
-    case Mode::IDLE:
-      stopMotors();
-#if Is_servo
-      steering_center();
-#endif
-      resetDriveRamp();
-      break;
-
-    case Mode::CALIBRATION:
-      run_calibration();
-      state.mode = Mode::IDLE;
-      break;
-
-    case Mode::READY:
-      stopMotors();
-      break;
-
-    case Mode::COUNTDOWN:
-      stopMotors();
-      if (millis() - state.countdown_start_ms >= state.start_delay_ms) {
-        state.mode = Mode::RUNNING;
-        steeringPID.reset();
-        resetDriveRamp();
-#if Is_blueTooth
-        notify("running\n");
-#endif
-      }
-      break;
-
+    case Mode::IDLE:        onIdle();        break;
+    case Mode::READY:       onReady();       break;
+    case Mode::COUNTDOWN:   onCountdown();   break;
+    case Mode::CALIBRATION: onCalibration(); break;
     case Mode::RUNNING:
       steeringPID.configure(state.pid.kp, state.pid.ki, state.pid.kd);
-      drive_step(dtSeconds);
+      onRunning(dtSeconds);
       break;
   }
 
