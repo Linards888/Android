@@ -32,7 +32,7 @@
   <p align="center">
     Real-time PID control, BLE tuning, and wireless telemetry for ESP-based Folkrace robots.
     <br />
-    <a href="https://github.com/Linards888/Android/Documentation"><strong>Explore the docs »</strong></a>
+    <a href="docs/README.md"><strong>Explore the docs »</strong></a>
     <br /><br />
     <a href="https://github.com/Linards888/Android/images/Demo">View Demo</a>
     ·

@@ -1,5 +1,7 @@
 # Calibration
 
+See [BLE_Commands.md](BLE_Commands.md) for the `calibrate` and `log` commands used below.
+
 ## TOF (VL53L0X)
 
 Nothing to calibrate by hand. Each sensor is assigned its I2C address (from
@@ -15,12 +17,12 @@ formula for your specific sensor, this firmware uses a simple two-point
 straight-line calibration, good enough over the ~10-80cm range a folkrace
 track needs:
 
-1. Upload the firmware with `Is_Sharp` enabled and `Is_blueTooth` enabled
-   (or just watch Serial output with a temporary debug print).
+1. Upload the firmware with `Is_Sharp` enabled (`Is_blueTooth` on too, if
+   you want to read values without a USB cable attached).
 2. Place a flat wall/object at a known **near** distance (e.g. 100mm) in
-   front of the sensor. Read the raw ADC value - easiest way is to
-   temporarily add `Serial.println(analogRead(<pin>));` in `setup()`, or
-   connect over BLE and use `log dist 200` once wired into `sensor_read()`.
+   front of the sensor. Read the raw ADC value - easiest way is a temporary
+   `Serial.println(analogRead(<pin>));`, since `sensor_read()` returns
+   already-converted millimeters, not the raw value calibration needs.
 3. Enter that raw value as `SHARP_ADC_AT_NEAR` and the distance as
    `SHARP_NEAR_MM` in `config.h`.
 4. Repeat at a known **far** distance (e.g. 800mm), filling in
