@@ -50,6 +50,14 @@ static void cmd_save(char* args) {
 #endif
 }
 
+// Snaps every quick-tunable back to the compiled-in defaults from
+// src/Core/RobotLogic.h's `tunable` namespace — a "factory reset" without
+// reflashing. Does NOT touch flash by itself; `save` afterwards if you want
+// the reset to survive a reboot too.
+static void cmd_defaults(char* args) {
+    state.reset_defaults = true;
+}
+
 static void cmd_state(char* args) {
     notify("state=%s kp=%.3f ki=%.3f kd=%.3f fwd=%u rev=%u\n",
            running_state_name(state.running_state),
@@ -124,6 +132,7 @@ static const CommandEntry command_list[] = {
     {"bwd",       cmd_bwd},
     {"180",       cmd_180},
     {"save",      cmd_save},
+    {"defaults",  cmd_defaults},
     {"state",     cmd_state},
 
     {"get",       cmd_get},

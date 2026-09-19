@@ -107,7 +107,9 @@ struct RobotState {
     float slope_threshold = 8.0f;    // degrees of pitch that counts as "on a ramp"
 
     // ---- persistence ----
-    bool save_state = false;    // set true (e.g. by the `save` command) to persist to flash
+    bool save_state = false;      // set true (e.g. by the `save` command) to persist to flash
+    bool reset_defaults = false;  // set true (by the `defaults` command) to reload the compiled-in
+                                   // QUICK TUNABLES from src/Core/RobotLogic.h, without reflashing
 
     DebugState debug;
 };
