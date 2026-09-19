@@ -11,8 +11,6 @@ each kind of change you'll want to make. If you only read one section, read
 configs/config_<robot>.h   <- WHAT you have: pins, sensors, motors, features
 config.h                   <- WHICH config is active right now (one line)
 Android.ino                <- setup() + the RunningState switch, nothing else
-src/Core/RobotLogic.h      <- quick-tunable defaults, registerParams(), the
-                               RUNNING-state algorithm, per-tick housekeeping
 src/*                      <- HOW everything works, so the two files above
                                don't have to
 ```
