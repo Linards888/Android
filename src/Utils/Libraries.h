@@ -16,18 +16,20 @@
   #error "Multiple boards selected! Only one of Is_Arduino / Is_Esp32 can be 1 at a time."
 #endif
 
-#if (OneMotor + TwoMotors + tank) == 0
-  #error "No motor configuration selected! Choose one of OneMotor / TwoMotors / tank."
+#if (DCOneMotor + DCTwoMotors + DCtank + BLDCOneMotor + BLDCTwoMotors + BLDCtank) == 0
+  #error "No motor configuration selected! Choose one of DCOneMotor / DCTwoMotors / DCtank / BLDCOneMotor / BLDCTwoMotors / BLDCtank in config.h."
 #endif
 
-#if (OneMotor + TwoMotors + tank) > 1
-  #error "Multiple motor configurations selected! Choose only one of OneMotor / TwoMotors / tank."
+#if (DCOneMotor + DCTwoMotors + DCtank + BLDCOneMotor + BLDCTwoMotors + BLDCtank) > 1
+  #error "Multiple motor configurations selected! Choose only one of DCOneMotor / DCTwoMotors / DCtank / BLDCOneMotor / BLDCTwoMotors / BLDCtank in config.h."
 #endif
 
-#if SpaceControl = 1
-  if (SpaceControl + Is_IMU < 1)  {
-    #error "Enable Also IMU sensor, if there is no IMU, turn off SpaceControl cant work"
-  }
+#if Is_servo && (DCtank || BLDCtank)
+  #error "Is_servo doesn't make sense with a tank (4-motor) config - steer with the motors instead. Turn Is_servo off."
+#endif
+
+#if spaceControl && !Is_IMU
+  #error "spaceControl needs the IMU sensor - set Is_IMU to 1, or turn spaceControl off."
 #endif
 
 // ---- libraries inclusion ----
@@ -44,6 +46,10 @@
   #include <VL53L0X.h>
   #include <Wire.h>
   #include "tof_logic.h"
+#endif
+
+#if Is_Sharp
+  #include "sharp_logic.h"
 #endif
 
 #if Is_blueTooth

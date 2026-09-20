@@ -1,82 +1,69 @@
 #include "tof_logic.h"
 
-//Es nesaprotu tik daudz, vai arī ja saprotu tad aizmirsu un tagat vairs neatceros, lūdzu palīdzat man
+namespace Tof {
 
-// Generates: TofSensor tof_front = {VL53L0X(), "front", 4, 0x30, 0, 0};  etc.
-  #define X(name, pin, addr, angle) TofSensor tof_##name = { VL53L0X(), #name, pin, addr, angle, 0 };
-    TOF_SENSOR_LIST
-  #undef X
+namespace {
+  // Every sensor this build knows about, in the same order they're
+  // defined in config.h. read() matches the TOFSensor reference it's
+  // given against this list by address, so callers just pass one of
+  // the globals, e.g. Tof::read(Front).
+  const TOFSensor *configs[] = { &Front, &Right, &Left, &RightSide, &LeftSide };
+  const size_t sensorCount = sizeof(configs) / sizeof(configs[0]);
 
-  // Build a pointer array so setup/read loops can iterate all sensors generically
-  #define X(name, pin, addr, angle) &tof_##name,
-    TofSensor* allTofSensors[] = { TOF_SENSOR_LIST };
-  #undef X
-  const uint8_t TOF_SENSOR_COUNT = sizeof(allTofSensors) / sizeof(allTofSensors[0]);
+  VL53L0X devices[sensorCount];
+  bool ready[sensorCount] = { false };
+}
 
-  void tof_setup() {
-    Wire.begin();
+void setupAll() {   // (still named TofInit right now - see the mismatch I flagged earlier)
+  Wire.begin();
 
-    // Step 1: hold every sensor's XSHUT low (disabled)
-    for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      pinMode(allTofSensors[i]->xshutPin, OUTPUT);
-      digitalWrite(allTofSensors[i]->xshutPin, LOW);
+  for (size_t i = 0; i < sensorCount; i++) {
+    if (configs[i]->pin == -1) {
+      ready[i] = false;
+      continue; // not installed - never touch this pin
     }
+    pinMode(configs[i]->pin, OUTPUT);
+    digitalWrite(configs[i]->pin, LOW);
+  }
+  delay(10);
 
-    // Step 2: wake sensors one at a time, assign each a unique address
-    for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      digitalWrite(allTofSensors[i]->xshutPin, HIGH);
-      delay(10);
-      allTofSensors[i]->sensor.setAddress(allTofSensors[i]->address);
-      allTofSensors[i]->sensor.init();
+  for (size_t i = 0; i < sensorCount; i++) {
+    if (configs[i]->pin == -1) {
+      continue; // already marked not-ready above
+    }
+    digitalWrite(configs[i]->pin, HIGH);
+    delay(10);
+
+    devices[i].setTimeout(500);
+    if (devices[i].init()) {
+      devices[i].setAddress(configs[i]->address);
+      devices[i].startContinuous();
+      ready[i] = true;
+    } else {
+      ready[i] = false;
+      Serial.print("Tof: ");
+      Serial.print(names[i]);
+      Serial.println(" sensor failed to init");
     }
   }
+}
 
-  void tof_readAll() {
-    for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      allTofSensors[i]->lastReadingMM = allTofSensors[i]->sensor.readRangeSingleMillimeters();
-      Serial.print(allTofSensors[i]->name);
-      Serial.print(" ("); Serial.print(allTofSensors[i]->angle); Serial.print("deg): ");
-      Serial.println(allTofSensors[i]->lastReadingMM);
-    }
-  }
-
-  // Reads ONE sensor, updates its cached value, returns the reading.
-  uint16_t tof_read(TofSensor* s) {
-    if (s == nullptr) return 0xFFFF;   // invalid pointer, return "out of range" style value
-
-    s->lastReadingMM = s->sensor.readRangeSingleMillimeters();
-
-    if (s->sensor.timeoutOccurred()) {
-      Serial.print("TOF timeout: ");
-      Serial.println(s->name);
-    }
-
-    return s->lastReadingMM;
-  }
-
-  // Convenience overload: read by name instead of pointer
-  uint16_t tof_read(const char* name) {
-    return tof_read(tof_getByName(name));
-  }
-
-  TofSensor* tof_getByName(const char* name) {
-    for (uint8_t i = 0; i < TOF_SENSOR_COUNT; i++) {
-      if (strcmp(allTofSensors[i]->name, name) == 0) {
-        return allTofSensors[i];
+uint16_t read(const TOFSensor &sensor) {
+  for (size_t i = 0; i < sensorCount; i++) {
+    if (configs[i] == &sensor) {
+      if (!ready[i]) {
+        return -1;
       }
+
+      uint16_t distance = devices[i].readRangeContinuousMillimeters();
+      if (devices[i].timeoutOccurred()) {
+        return -1;
+      }
+      return distance;
     }
-    return nullptr;
   }
 
-#endif
+  return -1; // not one of the sensors configured in config.h
+}
 
-
-/* ---- Tof Usage ----
-
-//By name
-uint16_t d = tof_read("front");
-
-//by pointer
-uint16_t d = tof_read(&tof_front);
-
-*/
+} // namespace Tof

@@ -2,25 +2,24 @@
 #include <Arduino.h>
 #include "config.h"
 
-#if Is_TOF
-  struct tofSensor {
-    VL53L0X sensor;
-    const char* name;
-    uint8_t xshutPin;
-    uint8_t address;
-    int16_t angle;
-  };
+// ToF (VL53L0X) sensor handling.
+//
+// Usage:
+//   Tof::setupAll();               // once, in setup()
+//   uint16_t d = Tof::read(Front); // anywhere after that, for whichever sensor you want
+//
+// The sensors themselves (Front, Right, Left, RightSide, LeftSide) are
+// defined in config.h - edit pins/addresses/angles there, not here.
 
-  #define X(name, pin, addr, angle) extern tofSensor tof_##name;
-    TOF_SENSOR_LIST
-  #undef X
+namespace Tof {
+  // Brings every sensor listed in config.h up on the shared I2C bus and
+  // gives each one its configured address. Call this once from setup(),
+  // after Wire is otherwise free to use.
+  void setupAll();
 
-  extern TofSensor* allTofSensors[];
-  extern const uint8_t TOF_SENSOR_COUNT;
-
-  void tof_setup();
-  void tof_readAll();
-  uint16_t tof_read(TofSensor* s);        // read just one sensor, by pointer
-  uint16_t tof_read(const char* name);    // read just one sensor, by name
-  TofSensor* tof_getByName(const char* name);
-#endif
+  // Reads one sensor and returns the distance in millimeters.
+  // Pass one of the sensor globals from config.h, e.g. Tof::read(Front).
+  // Returns 65535 (out-of-range / error) if that sensor failed to init
+  // during setupAll() or isn't one of the configured sensors.
+  uint16_t read(const TOFSensor &sensor);
+}

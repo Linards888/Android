@@ -28,6 +28,7 @@ void setup (){
   load_state();
 
   initBLE();
+  Motorsetup();
 
 }
 
@@ -37,7 +38,7 @@ void loop(){
       /*state when absolutley nothing is working, there is no date being
       sent from sensors, motors ar just off, the only BT commands are for
       parmeter settings and to start i first have to turn it to the state "READY"*/
-      stop();
+      Drive::stop();
 
       break;
     case CALIBRATION:
@@ -57,7 +58,9 @@ void loop(){
     break;
     case RUNNING:
       //edit main code and logic here:
-      
+      // e.g. Drive::drive(fspeed, fspeed); to go straight, or feed in
+      // your PID output per side: Drive::drive(fspeed + pidOut, fspeed - pidOut);
+
     break;
 
   }
