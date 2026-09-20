@@ -14,7 +14,7 @@ namespace {
   bool ready[sensorCount] = { false };
 }
 
-void setupAll() {   // (still named TofInit right now - see the mismatch I flagged earlier)
+void setupAll() {
   Wire.begin();
 
   for (size_t i = 0; i < sensorCount; i++) {
@@ -41,9 +41,7 @@ void setupAll() {   // (still named TofInit right now - see the mismatch I flagg
       ready[i] = true;
     } else {
       ready[i] = false;
-      Serial.print("Tof: ");
-      Serial.print(names[i]);
-      Serial.println(" sensor failed to init");
+      Serial.printf("Tof: sensor %u (pin %d) failed to init\n", (unsigned)i, configs[i]->pin);
     }
   }
 }

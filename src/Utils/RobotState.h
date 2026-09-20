@@ -17,4 +17,9 @@ enum RobotState {
 // Share the state variable across files
 extern RobotState currentState;
 
+// millis() timestamp COUNTDOWN was entered at. Shared so commands (see
+// src/BLE/Commands.cpp's "start") can kick off a countdown the same way
+// loop()'s own state machine does.
+extern unsigned long countdownStartTime;
+
 #endif

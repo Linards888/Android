@@ -4,16 +4,12 @@
 
 // ---- Error Messages ----
 
-#if Is_Arduino == 1
-  #error "turn off arduino. i wont make it to work with it"
+#if (DCOneMotor + DCTwoMotors + DCtank + BLDCOneMotor + BLDCTwoMotors + BLDCtank) == 0
+  #error "No motor configuration selected! ..."
 #endif
 
-#if (Is_Arduino + Is_Esp32) == 0
-  #error "No board selected! Set Is_Arduino to 0 and Is_Esp32 to 1."
-#endif
-
-#if (Is_Arduino + Is_Esp32) > 1
-  #error "Multiple boards selected! Only one of Is_Arduino / Is_Esp32 can be 1 at a time."
+#if (DCOneMotor + DCTwoMotors + DCtank + BLDCOneMotor + BLDCTwoMotors + BLDCtank) > 1
+  #error "Multiple motor configurations selected! ..."
 #endif
 
 #if (DCOneMotor + DCTwoMotors + DCtank + BLDCOneMotor + BLDCTwoMotors + BLDCtank) == 0
@@ -35,6 +31,13 @@
 // ---- libraries inclusion ----
 
 #include "Drive.h"
+
+// Tunable parameters (PID/motor/sensor/debug) + the registry that reads,
+// writes, and saves/loads them by name. Not gated behind any feature
+// flag - Android.ino and Drive.cpp both use these directly regardless of
+// whether BLE is enabled.
+#include "Params.h"
+#include "ParamRegistry.h"
 
 #if Is_IMU
   #include <FastIMU.h>
@@ -60,21 +63,9 @@
 
   #include "notify.h"
   #include "RobotBLE.h"
-#endif
-
-#if Is_Ultrasonic
-  #include "Ultrasonic_logic.h"
+  #include "Commands.h"
 #endif
 
 #if Is_servo
   #include <kkads_servo.h>
-#endif
-
-#if Memory
-  #include <Preferences.h>
-  #include "Memory.h"
-#endif
-
-#if spaceControl
-  #include "Space.h"
 #endif

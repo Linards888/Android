@@ -1,19 +1,10 @@
 #include "DeltaTime.h"
 #include "RobotState.h"
-#include "libraries.h"
-#include "RobotBLE.h"
-#include "Calibration.h"
-
+#include "Libraries.h"
 
 Preferences pref;
 static DeltaTime dt;
 // PIDC pid(pid);
-
-//Configurate Parameters
-float kp, ki, kd;
-int maxspeed, minspeed, rspeed, fspeed;
-int maxdelta, constrainpid, constraindelta, errorleftdist, errorrightdist, minwalldistFront;
-float kleft, kright;
 
 int16_t dist_left, dist_front, dist_right;
 
@@ -21,26 +12,38 @@ unsigned long countdownStartTime = 0;
 const unsigned long COUNTDOWN_DURATION = 5000; //milliseconds
 RobotState currentState = IDLE;
 
-void setup (){
+void calibration_run() {
+  Serial.println("calibration not implemented yet");
+  currentState = IDLE;
+}
+
+void setup() {
   Serial.begin(115200);
 
   pref.begin("Folkrace");
-  load_state();
+  ParamRegistry::load(pref);
 
-  initBLE();
   Motorsetup();
 
+#if Is_blueTooth
+  RobotBLE::begin();
+#endif
+
+  // ---- Manual parameter overrides ----
+  // Every tunable in src/Params/Params.h is a plain global
+  // Anything you set here wins last.
+  // kp = 1.2f;
 }
 
 void loop(){
+#if Is_blueTooth
+  Commands::pollSerial();
+#endif
+
   switch (currentState){
     case IDLE:
-      /*state when absolutley nothing is working, there is no date being
-      sent from sensors, motors ar just off, the only BT commands are for
-      parmeter settings and to start i first have to turn it to the state "READY"*/
-      Drive::stop();
-
-      break;
+      stop();
+    break;
     case CALIBRATION:
       Serial.println("Calibrating Sensors: ");
       calibration_run();
@@ -49,7 +52,7 @@ void loop(){
     break;
     case FORWARD:
     break;
-    case BACKWARDS:
+    case REVERSE:
     break;
     case COUNTDOWN:
       if (millis() - countdownStartTime >= COUNTDOWN_DURATION) {
@@ -57,10 +60,6 @@ void loop(){
       }
     break;
     case RUNNING:
-      //edit main code and logic here:
-      // e.g. Drive::drive(fspeed, fspeed); to go straight, or feed in
-      // your PID output per side: Drive::drive(fspeed + pidOut, fspeed - pidOut);
-
     break;
 
   }

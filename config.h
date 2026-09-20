@@ -25,7 +25,7 @@
 #define Is_servo        0 //for stearing
 
 //Select features
-#define Is_blueTooth   0
+#define Is_blueTooth   1
 #define Is_IMU         0
 #define Telemetry      0 //to PC with ground station
 #define spaceControl   0 //tries to understand track shape and where it's located on it
@@ -131,35 +131,3 @@ struct SteeringPins {
 #if Is_servo
   SteeringPins Steering = {13};
 #endif
-
-
-// ---- Drive tuning ----
-// Range for Drive::drive()'s left/right arguments (and Drive::steer()'s
-// delta) - e.g. drive(100, 100) is full speed straight ahead,
-// drive(-100, -100) is full speed in reverse, drive(100, -100) spins in
-// place on a differential config. Keep this in mind if you feed PID
-// output straight into drive() - clamp/scale it to this range first.
-const int DRIVE_MAX = 255;
-
-// DC motor PWM (ledc) settings.
-const int PWM_FREQ_HZ = 20000;      // 20kHz - above human hearing
-const int PWM_RESOLUTION_BITS = 8;  // 0-255 duty steps
-
-// BLDC ESC pulse widths, in microseconds (standard RC PWM/PPM). Re-tune
-// these against your own ESC's calibration if it doesn't follow the
-// 1000/1500/2000us convention.
-const int ESC_MIN_US = 1000;      // full reverse (or full-off, on ESCs with no reverse)
-const int ESC_NEUTRAL_US = 1500;  // stop
-const int ESC_MAX_US = 2000;      // full forward
-
-// Steering servo angle range, in degrees.
-const int STEER_MIN_DEG = 45;
-const int STEER_CENTER_DEG = 90;
-const int STEER_MAX_DEG = 135;
-
-// Pulse width (microseconds) corresponding to 0 and 180 degrees - most
-// hobby servos land somewhere in this range. Narrow it if yours buzzes
-// or strains at the endpoints Drive.cpp actually commands
-// (STEER_MIN_DEG..STEER_MAX_DEG above).
-const int SERVO_PULSE_MIN_US = 500;   // 0 degrees
-const int SERVO_PULSE_MAX_US = 2500;  // 180 degrees

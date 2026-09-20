@@ -1,4 +1,5 @@
 #include "Drive.h"
+#include "Params.h"
 
 namespace {
   int clampSpeed(int v) {
@@ -94,6 +95,8 @@ namespace {
 #endif
 }
 
+namespace Drive {
+
 void Motorsetup() {
 #if DCOneMotor
   setupDC(Motor);
@@ -174,3 +177,5 @@ void steer(int delta) {
   writeServoDeg(Steering.signal, angleDeg);
 }
 #endif
+
+} // namespace Drive
