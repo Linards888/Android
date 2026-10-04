@@ -1,4 +1,6 @@
 #include "sharp_logic.h"
+
+#if Is_Sharp
 #include <math.h>
 
 namespace Sharp {
@@ -16,8 +18,6 @@ namespace {
   // fit varies sensor to sensor. Re-tune these against docs/Calibration.md
   // once you have real readings, or replace readCm() with your sensor's
   // datasheet formula if you're using a different model.
-  const float ADC_MAX = 4095.0;  // ESP32 ADC is 12-bit
-  const float ADC_VREF = 3.3;    // ESP32 ADC reference voltage, in volts
 
   // Converts one raw analog reading into a distance in centimeters.
   // Returns -1 if the reading isn't usable (e.g. sensor unplugged).
@@ -60,3 +60,5 @@ uint16_t read(const SharpSensor &sensor) {
 }
 
 } // namespace Sharp
+
+#endif // Is_Sharp

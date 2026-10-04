@@ -1,5 +1,9 @@
 #include "tof_logic.h"
 
+#if Is_TOF
+#include <Wire.h>
+#include <VL53L0X.h>
+
 namespace Tof {
 
 namespace {
@@ -65,3 +69,5 @@ uint16_t read(const TOFSensor &sensor) {
 }
 
 } // namespace Tof
+
+#endif // Is_TOF

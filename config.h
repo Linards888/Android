@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 /* ============================================================
  *  CONFIGURATION: SET FOR YOUR FOLKRACE TYPE
@@ -17,7 +18,7 @@
 
 //Select only one and servo if necesary
 #define DCOneMotor      0
-#define DCTwoMotors     0 //eather with or without servo
+#define DCTwoMotors     1 //eather with or without servo
 #define DCtank          0 //4motors
 #define BLDCOneMotor    0
 #define BLDCTwoMotors   0 //eather with or without servo
@@ -40,34 +41,51 @@ const float ADC_MAX = 4095.0;  // ESP32 ADC is 12-bit
 const float ADC_VREF = 3.3;    // ESP32 ADC reference voltage, in volts
 
 
+// ---- Pin rules (ESP32 DevKit / WROOM-32) ----
+// Every global below is `inline` so this header can be included from
+// several .cpp files without "multiple definition" link errors, and so
+// every file sees the same object (Tof::read()/Sharp::read() match
+// sensors by address). Use -1 for "not connected".
+//
+//   NEVER use 6-11    - wired to the on-module flash, the chip crashes.
+//   Avoid 0, 2, 12, 15 - boot strapping pins; 12 held HIGH at power-on
+//                       stops the board from booting.
+//   21 / 22           - default I2C SDA / SCL, used by the ToF sensors.
+//   34-39             - input only (no pull-ups) - fine for Sharp sensors.
+//   Analog (Sharp)    - use ADC1 pins (32-39); ADC2 stops working while
+//                       WiFi is on.
+
+
 // ---- Sensor list ----
 struct TOFSensor {
-  uint8_t pin;
+  int8_t pin;
   uint16_t address;
   int16_t angle;
 };
 
 struct SharpSensor {
-  uint8_t pin;
+  int8_t pin;
   int16_t angle;
 };
 
 
 // ---- Sensor instances ----
 // Name = {XSHUT_PIN, I2C_ADDRESS, ANGLE_DEGREES}
-TOFSensor Front     = {8, 0x30, 0};
-TOFSensor Right     = {9, 0x31, 45};
-TOFSensor Left      = {10, 0x32, -45};
-TOFSensor RightSide = {11, 0x33, 90};
-TOFSensor LeftSide  = {12, 0x34, -90};
+inline TOFSensor Front     = {13, 0x30, 0};
+inline TOFSensor Right     = {16, 0x31, 45};
+inline TOFSensor Left      = {17, 0x32, -45};
+inline TOFSensor RightSide = {18, 0x33, 90};
+inline TOFSensor LeftSide  = {19, 0x34, -90};
 
 
 // Name = {ANALOG_PIN, ANGLE_DEGREES}
-SharpSensor SharpFront     = {-1, 0};
-SharpSensor SharpRight     = {-1, 45};
-SharpSensor SharpLeft      = {-1, -45};
-SharpSensor SharpRightSide = {-1, 90};
-SharpSensor SharpLeftSide  = {-1, -90};
+// Free ADC1 pins on a DevKit: 34, 35, 36, 39 (32/33 are ADC1 too, but
+// the default MotorRight uses them).
+inline SharpSensor SharpFront     = {-1, 0};
+inline SharpSensor SharpRight     = {-1, 45};
+inline SharpSensor SharpLeft      = {-1, -45};
+inline SharpSensor SharpRightSide = {-1, 90};
+inline SharpSensor SharpLeftSide  = {-1, -90};
 
 
 // ---- Motor pins ----
@@ -101,33 +119,37 @@ struct SteeringPins {
 
 #if DCOneMotor
   // Name = {PWM_PIN, IN1_PIN, IN2_PIN}
-  DCMotorPins Motor = {25, 26, 27};
+  inline DCMotorPins Motor = {25, 26, 27};
 
 #elif DCTwoMotors
-  DCMotorPins MotorLeft  = {25, 26, 27};
-  DCMotorPins MotorRight = {14, 32, 33};
+  inline DCMotorPins MotorLeft  = {25, 26, 27};
+  inline DCMotorPins MotorRight = {14, 32, 33};
 
 #elif DCtank
-  DCMotorPins MotorFrontLeft  = {25, 26, 27};
-  DCMotorPins MotorFrontRight = {14, 32, 33};
-  DCMotorPins MotorBackLeft   = {17, 16, 4};
-  DCMotorPins MotorBackRight  = {21, 19, 18};
+  inline DCMotorPins MotorFrontLeft  = {25, 26, 27};
+  inline DCMotorPins MotorFrontRight = {14, 32, 33};
+  // 4 motors use most of the free pins: the back motors share 16-19
+  // with the default ToF XSHUT pins above. Using ToF with a tank, either
+  // run fewer ToF sensors or wire each back motor in parallel with the
+  // front motor on the same side (they always get the same speed).
+  inline DCMotorPins MotorBackLeft   = {23, 16, 4};
+  inline DCMotorPins MotorBackRight  = {5, 19, 18};
 
 #elif BLDCOneMotor
   // Name = {SIGNAL_PIN}
-  BLDCMotorPins Motor = {25};
+  inline BLDCMotorPins Motor = {25};
 
 #elif BLDCTwoMotors
-  BLDCMotorPins MotorLeft  = {25};
-  BLDCMotorPins MotorRight = {26};
+  inline BLDCMotorPins MotorLeft  = {25};
+  inline BLDCMotorPins MotorRight = {26};
 
 #elif BLDCtank
-  BLDCMotorPins MotorFrontLeft  = {25};
-  BLDCMotorPins MotorFrontRight = {26};
-  BLDCMotorPins MotorBackLeft   = {27};
-  BLDCMotorPins MotorBackRight  = {14};
+  inline BLDCMotorPins MotorFrontLeft  = {25};
+  inline BLDCMotorPins MotorFrontRight = {26};
+  inline BLDCMotorPins MotorBackLeft   = {27};
+  inline BLDCMotorPins MotorBackRight  = {14};
 #endif
 
 #if Is_servo
-  SteeringPins Steering = {13};
+  inline SteeringPins Steering = {23};
 #endif

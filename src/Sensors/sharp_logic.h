@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include "config.h"
+#include "../../config.h"
 
 // Sharp (analog IR) distance sensor handling.
 //

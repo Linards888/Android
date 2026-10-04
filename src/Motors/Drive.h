@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include "config.h"
+#include "../../config.h"
 
 // Motor driving, abstracted over whichever motor type you picked in
 // config.h (DCOneMotor / DCTwoMotors / DCtank / BLDCOneMotor /
@@ -35,7 +35,7 @@
 // want to turn.
 //
 // Usage:
-//   Motorsetup();     // once, in setup()
+//   Drive::setup();   // once, in setup()
 //   drive(...);  // whichever shape above matches your config
 //   steer(60);   // if Is_servo is on - turn right
 //   stop();      // motors off (and steering centered)
