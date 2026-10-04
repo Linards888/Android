@@ -4,8 +4,8 @@
 #include <Preferences.h>
 #include <string.h>
 
-#include "ParamRegistry.h"
-#include "RobotState.h"
+#include "../Params/ParamRegistry.h"
+#include "../Utils/RobotState.h"
 #include "notify.h"
 
 extern Preferences pref; // defined in Android.ino

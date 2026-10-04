@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include "config.h"
+#include "../../config.h"
 
 // ToF (VL53L0X) sensor handling.
 //

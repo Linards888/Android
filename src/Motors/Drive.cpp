@@ -1,5 +1,5 @@
 #include "Drive.h"
-#include "Params.h"
+#include "../Params/Params.h"
 
 namespace {
   int clampSpeed(int v) {
@@ -97,7 +97,7 @@ namespace {
 
 namespace Drive {
 
-void Motorsetup() {
+void setup() {
 #if DCOneMotor
   setupDC(Motor);
 #elif DCTwoMotors

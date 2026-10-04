@@ -1,6 +1,6 @@
-#include "DeltaTime.h"
-#include "RobotState.h"
-#include "Libraries.h"
+#include "src/Utils/DeltaTime.h"
+#include "src/Utils/RobotState.h"
+#include "src/Utils/Libraries.h"
 
 Preferences pref;
 static DeltaTime dt;
@@ -23,7 +23,15 @@ void setup() {
   pref.begin("Folkrace");
   ParamRegistry::load(pref);
 
-  Motorsetup();
+  Drive::setup();
+
+#if Is_TOF
+  Tof::setupAll();
+#endif
+
+#if Is_Sharp
+  Sharp::setupAll();
+#endif
 
 #if Is_blueTooth
   RobotBLE::begin();
@@ -36,13 +44,11 @@ void setup() {
 }
 
 void loop(){
-#if Is_blueTooth
   Commands::pollSerial();
-#endif
 
   switch (currentState){
     case IDLE:
-      stop();
+      Drive::stop();
     break;
     case CALIBRATION:
       Serial.println("Calibrating Sensors: ");
@@ -52,7 +58,7 @@ void loop(){
     break;
     case FORWARD:
     break;
-    case REVERSE:
+    case BACKWARDS:
     break;
     case COUNTDOWN:
       if (millis() - countdownStartTime >= COUNTDOWN_DURATION) {

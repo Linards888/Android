@@ -1,4 +1,7 @@
 #include "RobotBLE.h"
+#include "../../config.h"
+
+#if Is_blueTooth
 
 #include <Arduino.h>
 #include <BLEDevice.h>
@@ -90,3 +93,5 @@ bool connected() {
 }
 
 } // namespace RobotBLE
+
+#endif // Is_blueTooth
